@@ -4,6 +4,8 @@ import logging
 import random
 import urllib
 import urllib2
+import requests
+import facebook
 
 # for sending images
 from PIL import Image
@@ -14,9 +16,15 @@ from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
 import webapp2
 
+
+#TOKEN TELEGRAMA NIE DOTYKAC PEDAŁY XD
 TOKEN = '129060792:AAGFH7v-zyS-PfX1I_-FOSIvm6vAAH9Yi-U'
 
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
+
+graph = facebook.GraphAPI(access_token='CAACEdEose0cBAPmsmdY7AN1Qnjqr2zJ2jy7JLSHWK3tcgLsohposOTxdjepzhmeDrzJdU9z1yP92G5zSfVD8qZArGpwJcY350moxa6PD5omeh3ZAiGAbrYECNCVDJGe4wXRdcgw3ZAijra0tfZBRRLfQZA7HLePZBtoFddKYBsVxhdocmwhdIqHDZC7GpMPRgtBm6Scb8i3sSXyv3sDNWyx')
+
+postNode = graph.get_object(id='1259489540744049_1259541450738858')
 
 
 # ================================
@@ -124,13 +132,14 @@ class WebhookHandler(webapp2.RequestHandler):
                 reply('What command?')
 
         # CUSTOMIZE FROM HERE
+        
 
         elif 'who are you' in text:
             reply('telebot starter kit, created by yukuku: https://github.com/yukuku/telebot')
         elif 'what time' in text:
             reply('look at the top-right corner of your screen!')
-        elif 'jestes gejem?' or 'bartus gej' or 'gej' in text:
-            reply('tak to prawda, jestem gejem a magda to przykrywka')
+        elif 'news' in text:
+            reply(postNode['message'])
 
 
 
