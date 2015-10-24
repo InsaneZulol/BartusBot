@@ -6,6 +6,7 @@ import urllib
 import urllib2
 import requests
 import facebook
+#import warnings
 
 # for sending images
 from PIL import Image
@@ -16,15 +17,25 @@ from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
 import webapp2
 
-
+#warnings.filterwarnings('ignore', category=DeprecationWarning) # dałem to, bo moduł facebook jest troche stary i wyskakują błędy i moze pomoze
 #TOKEN TELEGRAMA NIE DOTYKAC PEDAŁY XD
 TOKEN = '129060792:AAGFH7v-zyS-PfX1I_-FOSIvm6vAAH9Yi-U'
 
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 
-graph = facebook.GraphAPI(access_token='CAACEdEose0cBAPmsmdY7AN1Qnjqr2zJ2jy7JLSHWK3tcgLsohposOTxdjepzhmeDrzJdU9z1yP92G5zSfVD8qZArGpwJcY350moxa6PD5omeh3ZAiGAbrYECNCVDJGe4wXRdcgw3ZAijra0tfZBRRLfQZA7HLePZBtoFddKYBsVxhdocmwhdIqHDZC7GpMPRgtBm6Scb8i3sSXyv3sDNWyx')
+#app_secret = '417a9e046897e14bb66eac1c3f1c7451'
+#app_id = '985465174848513'
 
-postNode = graph.get_object(id='1259489540744049_1259541450738858')
+
+
+httpsTokenRequest = 'https://graph.facebook.com/oauth/access_token?client_id=985465174848513%20&client_secret=417a9e046897e14bb66eac1c3f1c7451&grant_type=client_credentials'
+r = requests.get(httpsTokenRequest)
+access_token = r.text.split('=')[1]
+
+graph = facebook.GraphAPI(access_token)
+
+postNode = graph.get_object(id='552976521435872_943559339044253') #hard-coded ID posta który pobieramy.
+                                                                  #TODO: pobieranie najnowszego posta
 
 
 # ================================
@@ -133,6 +144,7 @@ class WebhookHandler(webapp2.RequestHandler):
 
         # CUSTOMIZE FROM HERE
         
+        
 
         elif 'who are you' in text:
             reply('telebot starter kit, created by yukuku: https://github.com/yukuku/telebot')
@@ -140,8 +152,6 @@ class WebhookHandler(webapp2.RequestHandler):
             reply('look at the top-right corner of your screen!')
         elif 'news' in text:
             reply(postNode['message'])
-
-
 
         else:
             if getEnabled(chat_id):
