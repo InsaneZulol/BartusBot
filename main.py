@@ -139,6 +139,8 @@ class WebhookHandler(webapp2.RequestHandler):
                 output = StringIO.StringIO()
                 img.save(output, 'JPEG')
                 reply(img=output.getvalue())
+            elif text == '/news':
+                reply(postNode['message'])
             else:
                 reply('What command?')
 
