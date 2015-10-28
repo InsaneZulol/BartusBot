@@ -152,7 +152,11 @@ class WebhookHandler(webapp2.RequestHandler):
                 img.save(output, 'JPEG')
                 reply(img=output.getvalue())
             elif text == '/news':
+<<<<<<< HEAD
                 reply(postNode['message'], postNodePIC)
+=======
+                reply(postNode['message'])
+>>>>>>> origin/master
             else:
                 reply('What command?')
 
