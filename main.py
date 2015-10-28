@@ -6,7 +6,8 @@ import urllib
 import urllib2
 import requests
 import facebook
-#import warnings
+import warnings
+
 
 # for sending images
 from PIL import Image
@@ -17,7 +18,7 @@ from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
 import webapp2
 
-#warnings.filterwarnings('ignore', category=DeprecationWarning) # dałem to, bo moduł facebook jest troche stary i wyskakują błędy i moze pomoze
+warnings.filterwarnings('ignore', category=DeprecationWarning) # dałem to, bo moduł facebook jest troche stary i wyskakują błędy i moze pomoze
 #TOKEN TELEGRAMA NIE DOTYKAC PEDAŁY XD
 TOKEN = '129060792:AAGFH7v-zyS-PfX1I_-FOSIvm6vAAH9Yi-U'
 
@@ -27,15 +28,26 @@ BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 #app_id = '985465174848513'
 
 
+#TOKEN REQUEST HHTPS
 
 httpsTokenRequest = 'https://graph.facebook.com/oauth/access_token?client_id=985465174848513%20&client_secret=417a9e046897e14bb66eac1c3f1c7451&grant_type=client_credentials'
 r = requests.get(httpsTokenRequest)
-access_token = r.text.split('=')[1]
 
+access_token = r.text.split('=')[1]
 graph = facebook.GraphAPI(access_token)
 
-postNode = graph.get_object(id='552976521435872_943559339044253') #hard-coded ID posta który pobieramy.
-                                                                  #TODO: pobieranie najnowszego posta
+urlLastMessage = 'https://graph.facebook.com/film.czeski/feed?fields=id&limit=1&access_token=' + access_token
+response = requests.get(urlLastMessage)
+decoded_json_data = response.json()
+postNode = graph.get_object(id = decoded_json_data["data"][0]["id"])
+
+
+
+#TODO: To pobiera obrazek, teraz tylko zeby telegram umiał to odczytac na chacie.
+urlLastPicture = 'https://graph.facebook.com/film.czeski/feed?fields=full_picture&limit=1&access_token=' + access_token
+responsePIC = requests.get(urlLastPicture)
+decoded_json_PICDATA = responsePIC.json()
+postNodePIC = decoded_json_PICDATA["data"][0]["full_picture"]
 
 
 # ================================
@@ -139,6 +151,8 @@ class WebhookHandler(webapp2.RequestHandler):
                 output = StringIO.StringIO()
                 img.save(output, 'JPEG')
                 reply(img=output.getvalue())
+            elif text == '/news':
+                reply(postNode['message'], postNodePIC)
             else:
                 reply('What command?')
 
@@ -148,27 +162,10 @@ class WebhookHandler(webapp2.RequestHandler):
 
         elif 'who are you' in text:
             reply('telebot starter kit, created by yukuku: https://github.com/yukuku/telebot')
-        elif 'what time' in text:
-            reply('look at the top-right corner of your screen!')
-        elif 'news' in text:
-            reply(postNode['message'])
-
-        else:
-            if getEnabled(chat_id):
-                try:
-                    resp1 = json.load(urllib2.urlopen('http://www.simsimi.com/requestChat?lc=en&ft=1.0&req=' + urllib.quote_plus(text.encode('utf-8'))))
-                    back = resp1.get('res')
-                except urllib2.HTTPError, err:
-                    logging.error(err)
-                    back = str(err)
-                if not back:
-                    reply('okay...')
-                elif 'I HAVE NO RESPONSE' in back:
-                    reply('you said something with no meaning')
-                else:
-                    reply(back)
-            else:
-                logging.info('not enabled for chat_id {}'.format(chat_id))
+        elif 'wojna' in text:
+            reply('wojna gej')
+        elif 'cesky' in text:
+            reply(postNodePIC)
 
 
 app = webapp2.WSGIApplication([
