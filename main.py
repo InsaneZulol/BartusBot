@@ -7,6 +7,8 @@ import urllib2
 import requests
 import facebook
 import warnings
+import time
+from bs4 import BeautifulSoup
 
 
 # for sending images
@@ -36,18 +38,20 @@ r = requests.get(httpsTokenRequest)
 access_token = r.text.split('=')[1]
 graph = facebook.GraphAPI(access_token)
 
-urlLastMessage = 'https://graph.facebook.com/film.czeski/feed?fields=id&limit=1&access_token=' + access_token
-response = requests.get(urlLastMessage)
-decoded_json_data = response.json()
-postNode = graph.get_object(id = decoded_json_data["data"][0]["id"])
+url_last_post = 'https://graph.facebook.com/film.czeski/feed?fields=id&limit=1&access_token=' + access_token
+responseMSG = requests.get(url_last_post)
+decoded_json_MSGDATA = responseMSG.json()
+
+url_last_picture = 'https://graph.facebook.com/film.czeski/feed?fields=full_picture&limit=1&access_token=' + access_token
+responseIMG = requests.get(url_last_picture)
+decoded_json_IMGDATA = responseIMG.json()
+
+postNodeIMG = decoded_json_IMGDATA["data"][0]["full_picture"]
+postNode = graph.get_object(id = decoded_json_MSGDATA["data"][0]["id"])
 
 
 
-#TODO: To pobiera obrazek, teraz tylko zeby telegram umiał to odczytac na chacie.
-urlLastPicture = 'https://graph.facebook.com/film.czeski/feed?fields=full_picture&limit=1&access_token=' + access_token
-responsePIC = requests.get(urlLastPicture)
-decoded_json_PICDATA = responsePIC.json()
-postNodePIC = decoded_json_PICDATA["data"][0]["full_picture"]
+
 
 
 # ================================
@@ -114,6 +118,7 @@ class WebhookHandler(webapp2.RequestHandler):
             logging.info('no text')
             return
 
+
         def reply(msg=None, img=None):
             if msg:
                 resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
@@ -137,39 +142,22 @@ class WebhookHandler(webapp2.RequestHandler):
             logging.info(resp)
 
         if text.startswith('/'):
-            if text == '/start':
+            if text == '/start bartusbot':
                 reply('Bot enabled')
                 setEnabled(chat_id, True)
-            elif text == '/stop':
+            elif text == '/stop bartusbot':
                 reply('Bot disabled')
                 setEnabled(chat_id, False)
-            elif text == '/image':
-                img = Image.new('RGB', (512, 512))
-                base = random.randint(0, 16777216)
-                pixels = [base+i*j for i in range(512) for j in range(512)]  # generate sample image
-                img.putdata(pixels)
-                output = StringIO.StringIO()
-                img.save(output, 'JPEG')
-                reply(img=output.getvalue())
-            elif text == '/news':
-<<<<<<< HEAD
-                reply(postNode['message'], postNodePIC)
-=======
+            elif text == '/news@BartusBot' or text == '/news':
                 reply(postNode['message'])
->>>>>>> origin/master
-            else:
-                reply('What command?')
+                #reply(img=urllib2.urlopen(postNodePIC).read())
+            elif text == '/chuj':
+                reply('hujjj')
 
-        # CUSTOMIZE FROM HERE
-        
-        
-
-        elif 'who are you' in text:
-            reply('telebot starter kit, created by yukuku: https://github.com/yukuku/telebot')
         elif 'wojna' in text:
             reply('wojna gej')
-        elif 'cesky' in text:
-            reply(postNodePIC)
+            
+           
 
 
 app = webapp2.WSGIApplication([
