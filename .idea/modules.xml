@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$USER_HOME$/Dev/BajtusBot/.idea/BajtusBot.iml" filepath="$USER_HOME$/Dev/BajtusBot/.idea/BajtusBot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/BartusBot.iml" filepath="$PROJECT_DIR$/.idea/BartusBot.iml" />
+      <module fileurl="file://$USER_HOME$/Dev/python-parser/.idea/python-parser.iml" filepath="$USER_HOME$/Dev/python-parser/.idea/python-parser.iml" />
+    </modules>
+  </component>
+</project>
