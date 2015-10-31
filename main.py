@@ -127,7 +127,6 @@ class WebhookHandler(webapp2.RequestHandler):
                     'disable_web_page_preview': 'true',
                     'reply_to_message_id': str(message_id),
                 })).read()
-                """
             elif img:
                 resp = multipart.post_multipart(BASE_URL + 'sendPhoto', [
                     ('chat_id', str(chat_id)),
@@ -135,7 +134,6 @@ class WebhookHandler(webapp2.RequestHandler):
                 ], [
                     ('photo', 'image.jpg', img),
                 ])
-                """
             else:
                 logging.error('no msg or img specified')
                 resp = None
@@ -144,15 +142,22 @@ class WebhookHandler(webapp2.RequestHandler):
             logging.info(resp)
 
         if text.startswith('/'):
-            if text == '/start bartusbot':
+            if text == '/start bartusbot' or text == '/start':
                 reply('Bot enabled')
                 setEnabled(chat_id, True)
-            elif text == '/stop bartusbot':
+            elif text == '/stop bartusbot' or text == '/stop':
                 reply('Bot disabled')
                 setEnabled(chat_id, False)
             elif text == '/news@BartusBot' or text == '/news':
-                reply(facebook.postNode['message'])
-                #reply(img=urllib2.urlopen(postNodePIC).read())
+                reply(facebook.get_last_post()['message'])
+
+                # Przy ponizszym kodzie bot spamuje newsami
+                # TODO poprawic, znalezc powod
+                """
+                img = facebook.get_last_image()
+                if img:
+                    reply(img=urllib2.urlopen(img.read()))
+                """
 
             elif text == '/test':
                 reply('Działam')

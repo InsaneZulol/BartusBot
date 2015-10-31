@@ -10,12 +10,20 @@ class Facebook(object):
         self.r = requests.get(self.httpsTokenRequest)
         self.access_token = self.r.text.split('=')[1]
         self.graph = facebook.GraphAPI(self.access_token)
-        self.url_last_post = ""
-
-        self.get_last_post()
 
     def get_last_post(self):
-        self.url_last_post = 'https://graph.facebook.com/film.czeski/feed?fields=id&limit=1&access_token=' + self.access_token
-        self.responseMSG = requests.get(self.url_last_post)
-        self.decoded_json_MSGDATA = self.responseMSG.json()
-        self.postNode = self.graph.get_object(id = self.decoded_json_MSGDATA["data"][0]["id"])
+        url_last_post = 'https://graph.facebook.com/film.czeski/feed?fields=id&limit=1&access_token=' + self.access_token
+        responseMSG = requests.get(url_last_post)
+        decoded_json_MSGDATA = responseMSG.json()
+        postNode = self.graph.get_object(id = decoded_json_MSGDATA["data"][0]["id"])
+        return postNode
+
+    def get_last_image(self):
+        url_last_picture = 'https://graph.facebook.com/film.czeski/feed?fields=full_picture&limit=1&access_token=' + self.access_token
+        try:
+            responseIMG = requests.get(url_last_picture)
+            decoded_json_IMGDATA = responseIMG.json()
+            postNodeIMG = decoded_json_IMGDATA["data"][0]["full_picture"]
+            return postNodeIMG
+        except ValueError:
+            return False
