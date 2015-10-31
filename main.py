@@ -8,8 +8,6 @@ import requests
 import facebook_utils
 import warnings
 import datetime
-import time
-from bs4 import BeautifulSoup
 import utils
 
 # for sending images
@@ -21,37 +19,16 @@ from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
 import webapp2
 
+# Glowne zmienne
 plan = utils.Plan()
 facebook = facebook_utils.Facebook()
 
 warnings.filterwarnings('ignore', category=DeprecationWarning) # dałem to, bo moduł facebook jest troche stary i wyskakują błędy i moze pomoze
 
-#TOKEN TELEGRAMA NIE DOTYKAC PEDAŁY XD
+# Token telegrama
 TOKEN = '129060792:AAGFH7v-zyS-PfX1I_-FOSIvm6vAAH9Yi-U'
 
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
-
-#app_secret = '417a9e046897e14bb66eac1c3f1c7451'
-#app_id = '985465174848513'
-
-
-#TOKEN REQUEST HHTPS
-
-
-
-
-
-"""
-url_last_picture = 'https://graph.facebook.com/film.czeski/feed?fields=full_picture&limit=1&access_token=' + access_token
-responseIMG = requests.get(url_last_picture)
-decoded_json_IMGDATA = responseIMG.json()
-
-postNodeIMG = decoded_json_IMGDATA["data"][0]["full_picture"]
-
-"""
-
-
-
 
 
 # ================================
