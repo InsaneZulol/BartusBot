@@ -8,7 +8,9 @@ class Facebook(object):
     Zawieta pola access_token, graph
     """
     def __init__(self):
-        self.acces_token = self.get_acces_token()           # Pobieramy acces token
+        self.httpsTokenRequest = 'https://graph.facebook.com/oauth/access_token?client_id=985465174848513%20&client_secret=417a9e046897e14bb66eac1c3f1c7451&grant_type=client_credentials'
+        self.r = requests.get(self.httpsTokenRequest)
+        self.access_token = self.r.text.split('=')[1]
         self.graph = facebook.GraphAPI(self.access_token)
 
     def get_acces_token(self):
