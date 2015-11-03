@@ -121,13 +121,14 @@ class Plan(object):
 
         return self.lekcje[nr_lekcji][dzien]
 
-    def nastepna_lekcja(self, data):
+    def nastepna_lekcja(self):
         """
         Metoda zwracajaca nastepna lekcje i jej godziny w postaci wiadomosci string
         :param data: data najlepiej w postaci datetime.datetime.now()
         :return: string: wiadomosc skladajaca sie z nastepnej lekcji i jej godzin
         """
 
+        data = datetime.datetime.now()
         godzina = data.hour
         minuta = data.minute
         dzien = data.weekday()
