@@ -138,19 +138,19 @@ class WebhookHandler(webapp2.RequestHandler):
 
             elif text == '/test':
                 reply('Działam')
-            elif text == '/poniedzialek' or text == '/pon':
+            elif text == '/poniedzialek' or text == '/pon' or text == '/pon@BartusBot' :
                 reply(plan.lekcje_dzien(0))
-            elif text == '/wtorek' or text == '/wt':
+            elif text == '/wtorek' or text == '/wt' or text == '/wt@BartusBot':
                 reply(plan.lekcje_dzien(1))
-            elif text == '/sroda' or text == '/sr':
+            elif text == '/sroda' or text == '/sr' or text == '/sr@BartusBot':
                 reply(plan.lekcje_dzien(2))
-            elif text == '/czwartek' or text == '/cz':
+            elif text == '/czwartek' or text == '/cz' or text == '/cz@BartusBot':
                 reply(plan.lekcje_dzien(3))
-            elif text == '/piatek' or text == '/pt':
+            elif text == '/piatek' or text == '/pt' or text == '/pt@BartusBot':
                 reply(plan.lekcje_dzien(4))
-            elif text == '/jutro' or text == '/j':
+            elif text == '/jutro' or text == '/j' or text == '/j@BartusBot':
                 reply(plan.lekcje_dzien(datetime.datetime.now().weekday()+1))
-            elif text == '/nastepna' or text == '/n':
+            elif text == '/nastepna' or text == '/n' or text == '/n@BartusBot':
                 reply(plan.nastepna_lekcja())
 
         elif 'wojna' in text:
