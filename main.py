@@ -22,6 +22,20 @@ import webapp2
 # Glowne zmienne
 plan = utils.Plan()
 facebook = facebook_utils.Facebook()
+POMOC = """Nazywaja mnie @BartusBot. Jestem tu aby smieszkowac.
+
+Mozesz mnie kontrolowac uzywajac tych komend:
+
+/pon - Plan na poniedzialek
+/wt - Plan na wtorek
+/sr - Plan na srode
+/cz - Plan na czwartek
+/pt - Plan na piatek
+/j - Plan na jutro
+/n - Nastepna nastepna nastepna
+/d - Plan na dzisiaj
+
+Mozesz tez uzywac wydluzonych komend, np, /dzisiaj, /poniedzialek, /nastepna, /jutro itd."""
 
 warnings.filterwarnings('ignore', category=DeprecationWarning) # dałem to, bo moduł facebook jest troche stary i wyskakują błędy i moze pomoze
 
@@ -154,6 +168,8 @@ class WebhookHandler(webapp2.RequestHandler):
                 reply(plan.nastepna_lekcja())
             elif text == '/dzisiaj' or text == '/d' or text == '/d@BartusBot':
                 reply(plan.lekcje_dzien(datetime.datetime.now().weekday()))
+            elif text == '/help' or text == '/pomoc':
+                reply(POMOC)
 
         elif 'wojna' in text:
             reply('wojna gej')
