@@ -129,7 +129,7 @@ class Plan(object):
         """
 
         data = datetime.datetime.now()
-        godzina = data.hour
+        godzina = data.hour + 1
         minuta = data.minute
         dzien = data.weekday()
 
@@ -145,14 +145,14 @@ class Plan(object):
             if (godzina < godzina_t) or (godzina == godzina_t and minuta <= minuta_t):
                 lekcja = self.lekcja_godzina(i, dzien)
                 if len(lekcja)>0:
-                    return self.godziny[i][0] + " - " + self.godziny[i][1] + " " + lekcja + "\r\n Debug: " + str(data);
+                    return self.godziny[i][0] + " - " + self.godziny[i][1] + " " + lekcja
 
         # Jeszcze raz tym razem bez sprawdzania godziny
         # Zwracamy pierwsza lekcje nastepnego dnia
         for i in range(len(self.godziny)):
             lekcja = self.lekcja_godzina(i, dzien+1)
             if len(lekcja)>0:
-                return self.godziny[i][0] + " - " + self.godziny[i][1] + " " + lekcja + "\r\n Debug: " + str(data);
+                return self.godziny[i][0] + " - " + self.godziny[i][1] + " " + lekcja
 
         return "Jak ty to zrobiles?"
 
