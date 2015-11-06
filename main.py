@@ -152,6 +152,8 @@ class WebhookHandler(webapp2.RequestHandler):
                 reply(plan.lekcje_dzien(datetime.datetime.now().weekday()+1))
             elif text == '/nastepna' or text == '/n' or text == '/n@BartusBot':
                 reply(plan.nastepna_lekcja())
+            elif text == '/dzisiaj' or text == '/d' or text == '/d@BartusBot':
+                reply(plan.lekcje_dzien(datetime.datetime.now().weekday()))
 
         elif 'wojna' in text:
             reply('wojna gej')
