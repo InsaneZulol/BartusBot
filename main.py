@@ -140,16 +140,19 @@ class WebhookHandler(webapp2.RequestHandler):
                 reply('Bot disabled')
                 setEnabled(chat_id, False)
             elif text == '/news@BartusBot' or text == '/news':
-                reply(facebook.get_last_post()['message'])
-
-                # Przy ponizszym kodzie bot spamuje newsami
-                # TODO poprawic, znalezc powod
-                """
-                img = facebook.get_last_image()
+                ##img = facebook.get_last_image()
+                img = Image.new('RGB', (512, 512))
+                base = random.randint(0, 16777216)
+                pixels = [base+i*j for i in range(512) for j in range(512)]  # generate sample image
+                img.putdata(pixels)
+                output = StringIO.StringIO()
+                img.save(output, 'JPEG')
                 if img:
-                    reply(img=urllib2.urlopen(img.read()))
-                """
-
+                    reply(facebook.get_last_post()['message'])
+                    reply(reply(img=output.getvalue()))
+                else:
+                    reply(facebook.get_last_post()['message'])
+                    
             elif text == '/test':
                 reply('Działam')
             elif text == '/poniedzialek' or text == '/pon' or text == '/pon@BartusBot' :
