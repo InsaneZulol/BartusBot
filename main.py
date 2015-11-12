@@ -171,10 +171,16 @@ class WebhookHandler(webapp2.RequestHandler):
                 reply(plan.nastepna_lekcja())
             elif text == '/dzisiaj' or text == '/d' or text == '/d@BartusBot':
                 reply(plan.lekcje_dzien(datetime.datetime.now().weekday()))
+            elif text == '/wczoraj':
+                reply(plan.lekcje_dzien(datetime.datetime.now().weekday()-1))
+            elif text == '/sobota':
+                reply("Ty debilu...")
+            elif text == '/niedziela':
+                reply("Jaki glupek... ;__;")
             elif text == '/help' or text == '/pomoc':
                 reply(POMOC)
 
-        elif 'wojna' in text:
+        elif text == "wojna":
             reply('wojna gej')
             
            
