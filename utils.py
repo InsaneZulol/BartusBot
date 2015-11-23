@@ -60,11 +60,15 @@ class Plan(object):
             dzien = 0
             wiersz=wiersz.findAll('td',{'class':'l'})
             for lekcja in wiersz:
+                sala = lekcja.findAll('a', {'class':'s'})
                 lekcja = lekcja.findAll('span', {'class':'p'})
                 if(len(lekcja)==0):
                     plan[godzina].append("")
                 for przedmiot in lekcja:
-                    plan[godzina].append(przedmiot.string)
+                    if(len(sala)==0):
+                        plan[godzina].append(przedmiot.string)
+                    else:
+                        plan[godzina].append(przedmiot.string + " " + sala[0].string)
                 dzien += 1
             godzina += 1
 
