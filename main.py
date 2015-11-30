@@ -20,8 +20,9 @@ from google.appengine.ext import ndb
 import webapp2
 
 # Glowne zmienne
-plan = utils.Plan()
-facebook = facebook_utils.Facebook()
+plan = utils.Plan()                     # Zmienna dla obslugi planu
+facebook = facebook_utils.Facebook()    # Zmienna dla obslugi facebooka
+luck_level = 2                          # W przedziale od 0 do 100 im wiecej tym czesciej glupie odpowiedzi
 POMOC = """Nazywaja mnie @BartusBot. Jestem tu aby smieszkowac.
 
 Mozesz mnie kontrolowac uzywajac tych komend:
@@ -44,6 +45,23 @@ TOKEN = '129060792:AAGFH7v-zyS-PfX1I_-FOSIvm6vAAH9Yi-U'
 
 BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 
+def luck_sim(msg):
+    luck = random.randint(0,100)
+    if luck > luck_level:
+        return msg
+    else:
+        return plan.unlucky
+
+def send_smth():
+    for chat in plan.chats:
+        msg = random.choice(plan.odpowiedzi)
+        resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+            'chat_id': str(chat),
+            'text': msg.encode('utf-8'),
+            'disable_web_page_preview': 'true',
+        })).read()
+
+send_smth()
 
 # ================================
 
@@ -89,6 +107,8 @@ class SetWebhookHandler(webapp2.RequestHandler):
 
 
 class WebhookHandler(webapp2.RequestHandler):
+    utils.every_seconds(5, send_smth)
+
     def post(self):
         urlfetch.set_default_fetch_deadline(60)
         body = json.loads(self.request.body)
@@ -104,6 +124,9 @@ class WebhookHandler(webapp2.RequestHandler):
         fr = message.get('from')
         chat = message['chat']
         chat_id = chat['id']
+
+        if chat_id not in plan.chats:
+            plan.chats.append(chat_id)
 
         if not text:
             logging.info('no text')
@@ -152,38 +175,64 @@ class WebhookHandler(webapp2.RequestHandler):
                     reply(reply(img=output.getvalue()))
                 else:
                     reply(facebook.get_last_post()['message'])
-                    
+
             elif text == '/test':
-                reply('Działam')
+                msg = luck_sim(random.choice(plan.odpowiedzi))
+                reply(msg)
             elif text == '/poniedzialek' or text == '/pon' or text == '/pon@BartusBot' :
-                reply(plan.lekcje_dzien(0))
+                msg = luck_sim(plan.lekcje_dzien(0))
+                reply(msg)
             elif text == '/wtorek' or text == '/wt' or text == '/wt@BartusBot':
-                reply(plan.lekcje_dzien(1))
+                msg = luck_sim(plan.lekcje_dzien(1))
+                reply(msg)
             elif text == '/sroda' or text == '/sr' or text == '/sr@BartusBot':
+                msg = luck_sim()
                 reply(plan.lekcje_dzien(2))
             elif text == '/czwartek' or text == '/cz' or text == '/cz@BartusBot':
+                msg = luck_sim()
                 reply(plan.lekcje_dzien(3))
             elif text == '/piatek' or text == '/pt' or text == '/pt@BartusBot':
+                msg = luck_sim()
                 reply(plan.lekcje_dzien(4))
             elif text == '/jutro' or text == '/j' or text == '/j@BartusBot':
-                reply(plan.lekcje_dzien(datetime.datetime.now().weekday()+1))
+                msg = plan.lekcje_dzien(datetime.datetime.now().weekday()+1)
+                msg = luck_sim(msg)
+                reply(msg)
             elif text == '/nastepna' or text == '/n' or text == '/n@BartusBot':
-                reply(plan.nastepna_lekcja())
+                msg = plan.nastepna_lekcja()
+                msg = luck_sim(msg)
+                reply(msg)
             elif text == '/dzisiaj' or text == '/d' or text == '/d@BartusBot':
-                reply(plan.lekcje_dzien(datetime.datetime.now().weekday()))
+                msg = plan.lekcje_dzien(datetime.datetime.now().weekday())
+                msg = luck_sim(msg)
+                reply(msg)
             elif text == '/wczoraj':
                 reply(plan.lekcje_dzien(datetime.datetime.now().weekday()-1))
             elif text == '/sobota':
-                reply("Ty debilu...")
+                reply(random.choice(plan.odpowiedzi))
             elif text == '/niedziela':
-                reply("Jaki glupek... ;__;")
+                reply(random.choice(plan.odpowiedzi))
             elif text == '/help' or text == '/pomoc':
                 reply(POMOC)
+                send_smth()
+            elif text == '/wszyscy':
+                for chat in plan.chats:
+                    #msg = random.choice(plan.odpowiedzi)
+                    msg = "Kurwa: "
+                    for chat_str in plan.chats:
+                        msg += str(chat_str)
 
-        elif text == "wojna":
-            reply('wojna gej')
-            
-           
+                    #msg = ';'.join(plan.chats)
+                    resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+                        'chat_id': str(chat),
+                        'text': msg.encode('utf-8'),
+                        'disable_web_page_preview': 'true',
+                    })).read()
+
+
+        if random.randint(0,1000) < 2:
+            reply(random.choice(plan.odpowiedzi))
+
 
 
 app = webapp2.WSGIApplication([

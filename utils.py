@@ -17,6 +17,22 @@ class Plan(object):
         self.plan_url = "http://www.sci.edu.pl/plan/plany/o12.html"
         self.godziny = self.pobierz_godziny()
         self.lekcje = self.pobierz_lekcje()
+        self.odpowiedzi = [
+            "Kuurwa spok",
+            "Ty stara kurwo zmarnowałaś mi 25 lat zycia",
+            "Trzymajcie go bo zaraz zacznie wyrywac kable",
+            "Zapuszam dabstep",
+            "Zapusc kurwa dabstep",
+            "No w koncu pora sie najebac",
+            "Kurwa spok miales jedna robote do wykonania ja pierdole",
+            "Wypierdalaj z mojego statku",
+            "Zjebales spok \r\n Zjebales kurwa",
+            "Gdzie sa dziewczeta gdzie jest kurwa wodka co to jest za muzyka gdzie jest dabstep",
+            "Spok co do kurwy",
+            "Nie no spoko komputer do przepraszania",
+        ]
+        self.chats = []
+        self.unlucky = "Aaaaaaaaa nie dla psa dla pana to"
 
     def pobierz_godziny(self):
         """
