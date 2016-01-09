@@ -9,6 +9,10 @@ import facebook_utils
 import warnings
 import datetime
 import utils
+import threading
+import time
+from google.appengine.api import taskqueue
+import reminderStore
 
 # for sending images
 from PIL import Image
@@ -21,8 +25,9 @@ import webapp2
 
 # Glowne zmienne
 plan = utils.Plan()                     # Zmienna dla obslugi planu
-facebook = facebook_utils.Facebook()    # Zmienna dla obslugi facebooka
+#facebook = facebook_utils.Facebook()    # Zmienna dla obslugi facebooka
 luck_level = 2                          # W przedziale od 0 do 100 im wiecej tym czesciej glupie odpowiedzi
+reminder = reminderStore
 POMOC = """Nazywaja mnie @BartusBot. Jestem tu aby smieszkowac.
 
 Mozesz mnie kontrolowac uzywajac tych komend:
@@ -61,7 +66,14 @@ def send_smth():
             'disable_web_page_preview': 'true',
         })).read()
 
-send_smth()
+def every_seconds_custom(seconds):
+    threading.Timer(seconds, every_seconds_custom, [seconds, send_smth]).start()
+    logging.info('EVERY SECONDS!')
+
+
+#taskqueue.add(url='/service', params={'user': user}, method="GET")
+
+every_seconds_custom(2)
 
 # ================================
 
@@ -162,19 +174,19 @@ class WebhookHandler(webapp2.RequestHandler):
             elif text == '/stop bartusbot' or text == '/stop':
                 reply('Bot disabled')
                 setEnabled(chat_id, False)
-            elif text == '/news@BartusBot' or text == '/news':
-                ##img = facebook.get_last_image()
-                img = Image.new('RGB', (512, 512))
-                base = random.randint(0, 16777216)
-                pixels = [base+i*j for i in range(512) for j in range(512)]  # generate sample image
-                img.putdata(pixels)
-                output = StringIO.StringIO()
-                img.save(output, 'JPEG')
-                if img:
-                    reply(facebook.get_last_post()['message'])
-                    reply(reply(img=output.getvalue()))
-                else:
-                    reply(facebook.get_last_post()['message'])
+            # elif text == '/news@BartusBot' or text == '/news':
+            #     ##img = facebook.get_last_image()
+            #     img = Image.new('RGB', (512, 512))
+            #     base = random.randint(0, 16777216)
+            #     pixels = [base+i*j for i in range(512) for j in range(512)]  # generate sample image
+            #     img.putdata(pixels)
+            #     output = StringIO.StringIO()
+            #     img.save(output, 'JPEG')
+            #     if img:
+            #         reply(facebook.get_last_post()['message'])
+            #         reply(reply(img=output.getvalue()))
+            #     else:
+            #         reply(facebook.get_last_post()['message'])
 
             elif text == '/test':
                 msg = luck_sim(random.choice(plan.odpowiedzi))
@@ -186,11 +198,11 @@ class WebhookHandler(webapp2.RequestHandler):
                 msg = luck_sim(plan.lekcje_dzien(1))
                 reply(msg)
             elif text == '/sroda' or text == '/sr' or text == '/sr@BartusBot':
-                msg = luck_sim()
-                reply(plan.lekcje_dzien(2))
+                msg = luck_sim(plan.lekcje_dzien(2))
+                reply(msg)
             elif text == '/czwartek' or text == '/cz' or text == '/cz@BartusBot':
-                msg = luck_sim()
-                reply(plan.lekcje_dzien(3))
+                msg = luck_sim(plan.lekcje_dzien(3))
+                reply(msg)
             elif text == '/piatek' or text == '/pt' or text == '/pt@BartusBot':
                 msg = luck_sim()
                 reply(plan.lekcje_dzien(4))
@@ -218,9 +230,9 @@ class WebhookHandler(webapp2.RequestHandler):
             elif text == '/wszyscy':
                 for chat in plan.chats:
                     #msg = random.choice(plan.odpowiedzi)
-                    msg = "Kurwa: "
+                    msg = "Chat id's: "
                     for chat_str in plan.chats:
-                        msg += str(chat_str)
+                        msg += str(chat_str) + ", "
 
                     #msg = ';'.join(plan.chats)
                     resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
@@ -228,10 +240,46 @@ class WebhookHandler(webapp2.RequestHandler):
                         'text': msg.encode('utf-8'),
                         'disable_web_page_preview': 'true',
                     })).read()
+            elif text == '/test2':
+                send_smth()
 
+            elif text == '/przepraszam':
+                msg = "Przepraszam"
+                for chat in plan.chats:
+                    resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+                        'chat_id': str(chat),
+                        'text': msg.encode('utf-8'),
+                        'disable_web_page_preview': 'true',
+                    })).read()
 
-        if random.randint(0,1000) < 2:
-            reply(random.choice(plan.odpowiedzi))
+            elif text.startswith("/remind"):
+                temp = text
+                command = text[:text.rfind(" ")]
+                _msg = text[text.rfind(" ")+1:]
+                _date_temp = temp[:temp.rfind(" ")]
+                _date_temp = _date_temp[temp.rfind(" "):]
+
+                _msg_rep =  _msg + "\r\n" + _date_temp
+                _date = datetime.datetime.now()
+                _date_income = datetime.datetime.fromtimestamp(int(date))
+                _chat_id = str(chat_id)
+
+                reminderStore.putReminderRow(_chat_id, _date_income, _date, _msg)
+                reply(_msg_rep)
+            elif text == '/testremind':
+                expired_rows = reminderStore.getExpiredRows()
+
+                for row in expired_rows:
+                    resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+                        'chat_id': str(row.chat_id),
+                        'text': row.msg.encode('utf-8'),
+                        'disable_web_page_preview': 'true',
+                    })).read()
+
+                reminderStore.deleteReminds(expired_rows)
+
+        # if random.randint(0,1000) < 2:
+        #     reply(random.choice(plan.odpowiedzi))
 
 
 
