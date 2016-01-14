@@ -1,0 +1,4 @@
+cron:
+- description : check for reminds
+  url : /remindertask
+  schedule: every 1 minutes

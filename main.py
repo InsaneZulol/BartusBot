@@ -11,6 +11,12 @@ import datetime
 import utils
 import threading
 import time
+import parsedatetime
+import pytz
+from pytz import timezone
+from time import mktime
+from datetime import datetime, timedelta
+
 from google.appengine.api import taskqueue
 import reminderStore
 
@@ -66,14 +72,14 @@ def send_smth():
             'disable_web_page_preview': 'true',
         })).read()
 
-def every_seconds_custom(seconds):
-    threading.Timer(seconds, every_seconds_custom, [seconds, send_smth]).start()
-    logging.info('EVERY SECONDS!')
+# def every_seconds_custom(seconds):
+#     threading.Timer(seconds, every_seconds_custom, [seconds, send_smth]).start()
+#     logging.info('EVERY SECONDS!')
 
 
 #taskqueue.add(url='/service', params={'user': user}, method="GET")
 
-every_seconds_custom(2)
+# every_seconds_custom(2)
 
 # ================================
 
@@ -119,8 +125,6 @@ class SetWebhookHandler(webapp2.RequestHandler):
 
 
 class WebhookHandler(webapp2.RequestHandler):
-    utils.every_seconds(5, send_smth)
-
     def post(self):
         urlfetch.set_default_fetch_deadline(60)
         body = json.loads(self.request.body)
@@ -254,27 +258,42 @@ class WebhookHandler(webapp2.RequestHandler):
 
             elif text.startswith("/remind"):
                 temp = text
-                command = text[:text.rfind(" ")]
-                _msg = text[text.rfind(" ")+1:]
-                _date_temp = temp[:temp.rfind(" ")]
-                _date_temp = _date_temp[temp.rfind(" "):]
-
-                _msg_rep =  _msg + "\r\n" + _date_temp
-                _date = datetime.datetime.now()
-                _date_income = datetime.datetime.fromtimestamp(int(date))
+                temp = temp[temp.find(" ")+1:]
+                _date_temp = temp[:temp.find(" ")]
+                _msg = temp[len(_date_temp)+1:]
+                if len(_msg) < 1:
+                    _msg = "Mialem cos przypomniec teraz"
+                #_msg = temp[temp.find(" ")+1:]
+                _date = datetime.now()
+                _date_income = datetime.fromtimestamp(int(date))
                 _chat_id = str(chat_id)
 
+                cal = parsedatetime.Calendar()
+                cal.parse(_date_temp)
+
+                time_struct, parse_status = cal.parse(_date_temp)
+                _date = datetime.fromtimestamp(mktime(time_struct)) + timedelta(hours=1)
+                #_date, _ = cal.parseDT(datetimeString=_date_temp, tzinfo=pytz.timezone("Europe/Warsaw"))
+
                 reminderStore.putReminderRow(_chat_id, _date_income, _date, _msg)
-                reply(_msg_rep)
+                #reply(str(_date) + ":" + _msg)
+                reply("Spoko kumplu jasne ze przypomne")
+
             elif text == '/testremind':
+                x = 0
                 expired_rows = reminderStore.getExpiredRows()
 
                 for row in expired_rows:
+                    logging.info(str(row.msg) + str(row.date))
+
+                    _msg = str(row.msg)
+                    _chat_id = str(row.chat_id)
                     resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
-                        'chat_id': str(row.chat_id),
-                        'text': row.msg.encode('utf-8'),
+                        'chat_id': str(_chat_id),
+                        'text': _msg.encode('utf-8'),
                         'disable_web_page_preview': 'true',
                     })).read()
+
 
                 reminderStore.deleteReminds(expired_rows)
 
@@ -282,10 +301,29 @@ class WebhookHandler(webapp2.RequestHandler):
         #     reply(random.choice(plan.odpowiedzi))
 
 
+class ReminderTask(webapp2.RequestHandler):
+    def get(self):
+        #send_smth()
+        expired_rows = reminderStore.getExpiredRows()
+
+        for row in expired_rows:
+            logging.info(str(row.msg) + str(row.date))
+
+            _msg = str(row.msg)
+            _chat_id = str(row.chat_id)
+            resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+                'chat_id': str(_chat_id),
+                'text': _msg.encode('utf-8'),
+                'disable_web_page_preview': 'true',
+            })).read()
+
+
+        reminderStore.deleteReminds(expired_rows)
 
 app = webapp2.WSGIApplication([
     ('/me', MeHandler),
     ('/updates', GetUpdatesHandler),
     ('/set_webhook', SetWebhookHandler),
     ('/webhook', WebhookHandler),
+    ('/remindertask', ReminderTask)
 ], debug=True)

@@ -1,6 +1,9 @@
 from google.appengine.ext import db
 import datetime
+import logging
+import utils
 import webapp2
+from datetime import timedelta
 
 class ReminderRow(db.Model):
     chat_id = db.StringProperty()
@@ -13,8 +16,9 @@ def putReminderRow(_chat_id, _date_income, _date, _msg):
     e.put()
 
 def getExpiredRows():
-    date = datetime.datetime.now().date()
-    expired_rows = db.GqlQuery("SELECT * FROM ReminderRow WHERE date < '"+date.strftime('%Y-%m-%d %H:%M:%S')+"'")
+    date = datetime.datetime.now() + timedelta(hours=1)
+    logging.info("reminderStore: " + "DATETIME('"+date.strftime('%Y-%m-%d %H:%M:%S')+"')")
+    expired_rows = db.GqlQuery("SELECT * FROM ReminderRow WHERE date < DATETIME('"+date.strftime('%Y-%m-%d %H:%M:%S')+"')")
     return expired_rows
 
 def deleteReminds(expired_rows):

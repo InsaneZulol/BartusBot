@@ -42,7 +42,7 @@ class Plan(object):
         godziny = []
 
         page = urllib2.urlopen(self.plan_url)
-        soup = BeautifulSoup(page.read())
+        soup = BeautifulSoup(page.read(), "html.parser")
         godziny_t=soup.findAll('td',{'class':'g'})
 
         for godzina_t in godziny_t:
@@ -69,7 +69,7 @@ class Plan(object):
         godzina = 0
 
         page = urllib2.urlopen(self.plan_url)
-        soup = BeautifulSoup(page.read())
+        soup = BeautifulSoup(page.read(), "html.parser")
         wiersze=soup.findAll('tr')
 
         for wiersz in wiersze:
