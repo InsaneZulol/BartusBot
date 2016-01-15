@@ -16,6 +16,7 @@ import pytz
 from pytz import timezone
 from time import mktime
 from datetime import datetime, timedelta
+from google.appengine.api import taskqueue
 
 from google.appengine.api import taskqueue
 import reminderStore
@@ -211,7 +212,7 @@ class WebhookHandler(webapp2.RequestHandler):
                 msg = luck_sim()
                 reply(plan.lekcje_dzien(4))
             elif text == '/jutro' or text == '/j' or text == '/j@BartusBot':
-                msg = plan.lekcje_dzien(datetime.datetime.now().weekday()+1)
+                msg = plan.lekcje_dzien(datetime.now().weekday()+1)
                 msg = luck_sim(msg)
                 reply(msg)
             elif text == '/nastepna' or text == '/n' or text == '/n@BartusBot':
@@ -219,11 +220,11 @@ class WebhookHandler(webapp2.RequestHandler):
                 msg = luck_sim(msg)
                 reply(msg)
             elif text == '/dzisiaj' or text == '/d' or text == '/d@BartusBot':
-                msg = plan.lekcje_dzien(datetime.datetime.now().weekday())
+                msg = plan.lekcje_dzien(datetime.now().weekday())
                 msg = luck_sim(msg)
                 reply(msg)
             elif text == '/wczoraj':
-                reply(plan.lekcje_dzien(datetime.datetime.now().weekday()-1))
+                reply(plan.lekcje_dzien(datetime.now().weekday()-1))
             elif text == '/sobota':
                 reply(random.choice(plan.odpowiedzi))
             elif text == '/niedziela':
@@ -257,73 +258,111 @@ class WebhookHandler(webapp2.RequestHandler):
                     })).read()
 
             elif text.startswith("/remind"):
-                temp = text
-                temp = temp[temp.find(" ")+1:]
-                _date_temp = temp[:temp.find(" ")]
-                _msg = temp[len(_date_temp)+1:]
-                if len(_msg) < 1:
-                    _msg = "Mialem cos przypomniec teraz"
-                #_msg = temp[temp.find(" ")+1:]
-                _date = datetime.now()
-                _date_income = datetime.fromtimestamp(int(date))
-                _chat_id = str(chat_id)
+                _msg_id = str(message_id)
+                logging.info(_msg_id)
+                try:
+                    temp = text
+                    temp = temp[temp.find(" ")+1:]
+                    _date_temp = temp[:temp.find(" ")]
+                    _msg = temp[len(_date_temp)+1:]
+                    if len(_msg) < 1:
+                        _msg = "Prawilnie przypominam"
+                    #_msg = temp[temp.find(" ")+1:]
+                    _date = datetime.now()
+                    _date_income = datetime.fromtimestamp(int(date))
+                    _chat_id = str(chat_id)
 
-                cal = parsedatetime.Calendar()
-                cal.parse(_date_temp)
+                    cal = parsedatetime.Calendar()
+                    cal.parse(_date_temp)
 
-                time_struct, parse_status = cal.parse(_date_temp)
-                _date = datetime.fromtimestamp(mktime(time_struct)) + timedelta(hours=1)
-                #_date, _ = cal.parseDT(datetimeString=_date_temp, tzinfo=pytz.timezone("Europe/Warsaw"))
+                    time_struct, parse_status = cal.parse(_date_temp)
+                    _date = datetime.fromtimestamp(mktime(time_struct)) + timedelta(hours=1)
+                    #_date, _ = cal.parseDT(datetimeString=_date_temp, tzinfo=pytz.timezone("Europe/Warsaw"))
 
-                reminderStore.putReminderRow(_chat_id, _date_income, _date, _msg)
-                #reply(str(_date) + ":" + _msg)
-                reply("Spoko kumplu jasne ze przypomne")
+                    reminderStore.putReminderRow(_chat_id, _date_income, _date, _msg, _msg_id)
+                    #reply(str(_date) + ":" + _msg)
+                    reply("Spoko kumplu jasne ze przypomne")
+                except:
+                    reply("Cos sie zepsulo i nie bylo cie slychac")
+                    logging.info("Error in /remind")
 
             elif text == '/testremind':
                 x = 0
                 expired_rows = reminderStore.getExpiredRows()
 
                 for row in expired_rows:
-                    logging.info(str(row.msg) + str(row.date))
-
-                    _msg = str(row.msg)
-                    _chat_id = str(row.chat_id)
-                    resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
-                        'chat_id': str(_chat_id),
-                        'text': _msg.encode('utf-8'),
-                        'disable_web_page_preview': 'true',
-                    })).read()
+                    #logging.info(str(row.msg) + str(row.date))
+                    try:
+                        _msg = str(row.msg)
+                        _chat_id = str(row.chat_id)
+                        resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+                            'chat_id': str(_chat_id),
+                            'text': _msg.encode('utf-8'),
+                            'disable_web_page_preview': 'true',
+                            'reply_to_message_id': str(row.msg_id),
+                        })).read()
+                    except:
+                        logging.info("Error in /testremind")
 
 
                 reminderStore.deleteReminds(expired_rows)
 
+            elif text == '/clearremind':
+                x = 1
+                #deleteAllRows()
+
         # if random.randint(0,1000) < 2:
         #     reply(random.choice(plan.odpowiedzi))
 
+def deleteAllRows():
+    all_rows = reminderStore.getAllRows()
+    reminderStore.deleteReminds(all_rows)
 
 class ReminderTask(webapp2.RequestHandler):
     def get(self):
         #send_smth()
         expired_rows = reminderStore.getExpiredRows()
+        logging.info("Reminder task")
 
         for row in expired_rows:
-            logging.info(str(row.msg) + str(row.date))
-
-            _msg = str(row.msg)
+            #logging.info(str(row.msg) + str(row.date))
+            logging.info("Chat enabled:" + str(getEnabled(row.chat_id)))
+            error = False
             _chat_id = str(row.chat_id)
-            resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
-                'chat_id': str(_chat_id),
-                'text': _msg.encode('utf-8'),
-                'disable_web_page_preview': 'true',
-            })).read()
+            try:
+                _msg = str(row.msg)
+                _msg = unicode(_msg)
+            except:
+                logging.info("Error with parsing _msg or _chat_id")
+                reminderStore.deleteRemind(row)
+                _msg = "Prawilnie przypominam"
+
+            try:
+                resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+                    'chat_id': str(_chat_id),
+                    'text': _msg.encode('utf-8'),
+                    'disable_web_page_preview': 'true',
+                    'reply_to_message_id': str(row.msg_id),
+                })).read()
+                logging.info("Chan enabled:" + str(getEnabled(row.chat_id)))
+                reminderStore.deleteRemind(row)
+            except:
+                logging.info("Error in sendind")
 
 
-        reminderStore.deleteReminds(expired_rows)
+class ReminderQueue(webapp2.RequestHandler):
+    def get(self):
+        logging.info("Jestem w kolejce")
+        taskqueue.add(url='/remindertask', method="GET")
+        taskqueue.add(url='/remindertask', method="GET", coundown=30)
+
+
 
 app = webapp2.WSGIApplication([
     ('/me', MeHandler),
     ('/updates', GetUpdatesHandler),
     ('/set_webhook', SetWebhookHandler),
     ('/webhook', WebhookHandler),
-    ('/remindertask', ReminderTask)
+    ('/remindertask', ReminderTask),
+    ('/reminderqueue', ReminderTask),
 ], debug=True)
