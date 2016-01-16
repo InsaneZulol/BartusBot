@@ -27,3 +27,4 @@ Komenda | Opis
 `/j`    | Wyświetla plan na jutro
 `/n`    | Wyświetla następną lekcje
 `/d`    | Wyświetla plan na dzisiaj
+`/remind data wiadomosc` | Przypomnienie wiadomosc o danej dacie w formie 1d, 1m, tomorrow, eod etc.
