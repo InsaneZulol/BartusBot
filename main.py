@@ -263,8 +263,8 @@ class WebhookHandler(webapp2.RequestHandler):
                 try:
                     temp = text
                     temp = temp[temp.find(" ")+1:]
-                    _date_temp = temp[:temp.find(" ")]
-                    _msg = temp[len(_date_temp)+1:]
+                    _date_temp = temp[:temp.find("\"")]
+                    _msg = temp[len(_date_temp)+1:len(temp)-1]
                     if len(_msg) < 1:
                         _msg = "Prawilnie przypominam"
                     #_msg = temp[temp.find(" ")+1:]
@@ -276,12 +276,13 @@ class WebhookHandler(webapp2.RequestHandler):
                     cal.parse(_date_temp)
 
                     time_struct, parse_status = cal.parse(_date_temp)
-                    _date = datetime.fromtimestamp(mktime(time_struct)) + timedelta(hours=1)
+                    _date = datetime.fromtimestamp(mktime(time_struct))
                     #_date, _ = cal.parseDT(datetimeString=_date_temp, tzinfo=pytz.timezone("Europe/Warsaw"))
 
                     reminderStore.putReminderRow(_chat_id, _date_income, _date, _msg, _msg_id)
                     #reply(str(_date) + ":" + _msg)
-                    reply("Spoko kumplu jasne ze przypomne")
+                    #reply(_msg + ":" + _date.strftime("%Y-%m-%d %H:%M:%S"))
+                    reply("Spoko cumplu przypomne.")
                 except:
                     reply("Cos sie zepsulo i nie bylo cie slychac")
                     logging.info("Error in /remind")
@@ -347,7 +348,7 @@ class ReminderTask(webapp2.RequestHandler):
                 logging.info("Chan enabled:" + str(getEnabled(row.chat_id)))
                 reminderStore.deleteRemind(row)
             except:
-                logging.info("Error in sendind")
+                logging.info("Error in sending")
 
 
 class ReminderQueue(webapp2.RequestHandler):

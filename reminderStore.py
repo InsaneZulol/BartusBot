@@ -18,7 +18,7 @@ def putReminderRow(_chat_id, _date_income, _date, _msg, _msg_id):
     e.put()
 
 def getExpiredRows():
-    date = datetime.datetime.now() + timedelta(hours=1)
+    date = datetime.datetime.now()
     logging.info("reminderStore: " + "DATETIME('"+date.strftime('%Y-%m-%d %H:%M:%S')+"')")
     expired_rows = db.GqlQuery("SELECT * FROM ReminderRow WHERE date < DATETIME('"+date.strftime('%Y-%m-%d %H:%M:%S')+"')")
     try:
