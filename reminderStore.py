@@ -3,6 +3,7 @@ import datetime
 import logging
 import utils
 import webapp2
+from collections import Counter
 from datetime import timedelta
 
 class ReminderRow(db.Model):
@@ -40,3 +41,40 @@ def deleteReminds(expired_rows):
 def deleteRemind(row):
     logging.info("Usuwanie")
     db.delete(row)
+
+
+class LogRow(db.Model):
+    chat_id = db.StringProperty()
+    user_id = db.StringProperty()
+    username = db.StringProperty()
+    chatname = db.StringProperty()
+    date = db.DateTimeProperty(auto_now_add=True)
+    msg = db.StringProperty()
+
+def putLogRow(chat_id, user_id, username, chatname, date, msg):
+    logging.info("Logging message")
+    e = LogRow(chat_id=chat_id, user_id=user_id, username=username, chatname=chatname, date=date, msg=msg)
+    e.put()
+
+def getStats(chat_id):
+    chat_id = str(chat_id)
+    all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id=:1", chat_id)
+
+    n_array = []
+    for row in all_rows:
+        n_array.append(row.username)
+    c = Counter( n_array )
+    logging.info( str(c.items()) )
+    return( c.items() )
+
+def getStatsPrevMonth(chat_id):
+    chat_id = str(chat_id)
+    date = datetime.datetime.now() - datetime.timedelta(seconds=60)
+    date = date.strftime('%Y-%m-%d %H:%M:%S')
+    all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id=:1 AND date > DATETIME(:2)", chat_id, date)
+    n_array = []
+    for row in all_rows:
+        n_array.append(row.username)
+    c = Counter( n_array )
+    logging.info( str(c.items()) )
+    return( c.items() )

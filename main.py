@@ -1,4 +1,12 @@
-﻿import StringIO
+﻿# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+
+import StringIO
 import json
 import logging
 import random
@@ -137,10 +145,35 @@ class WebhookHandler(webapp2.RequestHandler):
         message = body['message']
         message_id = message.get('message_id')
         date = message.get('date')
-        text = message.get('text')
+        _date_income = datetime.fromtimestamp(int(date))
+        try:
+            text = message.get('text').decode("utf-8")
+        except:
+            text = message.get('text')
         fr = message.get('from')
+        user_id = fr['id']
+        try:
+            first_name = fr['first_name']
+        except:
+            first_name = ""
+
+        try:
+            last_name = fr['last_name']
+        except:
+            last_name = ""
+        user_name = first_name.decode("utf-8") + " " + last_name.decode("utf-8")
         chat = message['chat']
         chat_id = chat['id']
+        try:
+            chat_name = chat['title'].decode("utf-8")
+        except:
+            chat_name = ""
+
+
+        # logging
+        #logging.info("Author: " + fr + ". Chat: " + chat + ", id: " + chat_id)
+        if text != "":
+            reminderStore.putLogRow(str(chat_id).decode('utf8'), str(user_id).decode('utf8'), str(user_name).decode('utf8'), str(chat_name).decode('utf8'), _date_income, str(text).decode('utf8'))
 
         if chat_id not in plan.chats:
             plan.chats.append(chat_id)
@@ -312,6 +345,35 @@ class WebhookHandler(webapp2.RequestHandler):
                 x = 1
                 #deleteAllRows()
 
+            elif text == '/stats':
+                stats = reminderStore.getStats(str(chat_id))
+                msg = "User   :   number of messages  :   %\r\n"
+                msg += "----------------------------------"
+                count = 0
+                for row in stats:
+                    count += row[1]
+                for row in stats:
+                    msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str((row[1]/count)*100) + "%"
+                reply(msg)
+
+            elif text == '/statsprevmonth':
+                stats = reminderStore.getStats(str(chat_id))
+                msg = "Monthly stats\r\n"
+                msg += "User   :   number of messages  :   %\r\n"
+                msg += "----------------------------------"
+                count = 0
+                for row in stats:
+                    count += row[1]
+                for row in stats:
+                    msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str((row[1]/count)*100) + "%"
+
+                resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+                    'chat_id': str(chat_id),
+                    'text': msg.encode('utf-8'),
+                    'disable_web_page_preview': 'true',
+                })).read()
+
+
         # if random.randint(0,1000) < 2:
         #     reply(random.choice(plan.odpowiedzi))
 
@@ -350,6 +412,23 @@ class ReminderTask(webapp2.RequestHandler):
             except:
                 logging.info("Error in sending")
 
+class StatsTask(webapp2.RequestHandler):
+    def get(self):
+        stats = reminderStore.getStats(str(-100857893))
+        msg = "Monthly stats\r\n"
+        msg += "User   :   number of messages  :   %\r\n"
+        msg += "----------------------------------"
+        count = 0
+        for row in stats:
+            count += row[1]
+        for row in stats:
+            msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str((row[1]/count)*100) + "%"
+
+        resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+            'chat_id': str(-100857893),
+            'text': msg.encode('utf-8'),
+            'disable_web_page_preview': 'true',
+        })).read()
 
 class ReminderQueue(webapp2.RequestHandler):
     def get(self):
@@ -366,4 +445,5 @@ app = webapp2.WSGIApplication([
     ('/webhook', WebhookHandler),
     ('/remindertask', ReminderTask),
     ('/reminderqueue', ReminderTask),
+    ('/statstask', StatsTask),
 ], debug=True)

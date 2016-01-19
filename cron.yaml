@@ -2,3 +2,6 @@ cron:
 - description : check for reminds
   url : /remindertask
   schedule: every 1 minutes
+- description : post stats
+  url : /statstask
+  schedule: 1 of month 09:00
