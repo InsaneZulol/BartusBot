@@ -49,11 +49,12 @@ class LogRow(db.Model):
     username = db.StringProperty()
     chatname = db.StringProperty()
     date = db.DateTimeProperty(auto_now_add=True)
-    msg = db.StringProperty()
+    msg = db.TextProperty()
 
 def putLogRow(chat_id, user_id, username, chatname, date, msg):
+    text = db.Text(msg)
     logging.info("Logging message")
-    e = LogRow(chat_id=chat_id, user_id=user_id, username=username, chatname=chatname, date=date, msg=msg)
+    e = LogRow(chat_id=chat_id, user_id=user_id, username=username, chatname=chatname, date=date, msg=text)
     e.put()
 
 def getStats(chat_id):
