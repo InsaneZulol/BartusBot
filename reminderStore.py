@@ -66,7 +66,10 @@ def getStats(chat_id):
         n_array.append(row.username)
     c = Counter( n_array )
     logging.info( str(c.items()) )
-    return( c.items() )
+    sorted_array = sorted(c.items(), key=lambda user: user[1], reverse=True)
+    logging.info(sorted_array)
+    #return( c.items() )
+    return( sorted_array )
 
 def getStatsPrevMonth(chat_id):
     chat_id = str(chat_id)
