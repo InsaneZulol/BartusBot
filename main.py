@@ -353,7 +353,8 @@ class WebhookHandler(webapp2.RequestHandler):
                 for row in stats:
                     count += row[1]
                 for row in stats:
-                    msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str((row[1]/count)*100) + "%"
+                    percentage = (float(row[1])/float(count))*100.0
+                    msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
                 reply(msg)
 
             elif text == '/statsprevmonth':
