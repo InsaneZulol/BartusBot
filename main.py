@@ -56,6 +56,11 @@ Mozesz mnie kontrolowac uzywajac tych komend:
 /n - Nastepna nastepna nastepna
 /d - Plan na dzisiaj
 
+/remind data "wiadomosc" - przypomninanie
+data w formacie: 1d, 1m, tomorrow, eom, 2016-03-02, itd
+
+/stats - wyswietla statystyki czatu
+
 Mozesz tez uzywac wydluzonych komend, np, /dzisiaj, /poniedzialek, /nastepna, /jutro itd."""
 
 warnings.filterwarnings('ignore', category=DeprecationWarning) # dałem to, bo moduł facebook jest troche stary i wyskakują błędy i moze pomoze
