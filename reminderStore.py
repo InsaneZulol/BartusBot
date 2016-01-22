@@ -74,8 +74,7 @@ def getStats(chat_id):
 def getStatsPrevMonth(chat_id):
     chat_id = str(chat_id)
     date = datetime.datetime.now() - datetime.timedelta(seconds=60)
-    date = date.strftime('%Y-%m-%d %H:%M:%S')
-    all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id=:1 AND date > DATETIME(:2)", chat_id, date)
+    all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id='"+chat_id+"' AND date > DATETIME('"+date.strftime('%Y-%m-%d %H:%M:%S')+"')")
     n_array = []
     for row in all_rows:
         n_array.append(row.username)

@@ -363,7 +363,7 @@ class WebhookHandler(webapp2.RequestHandler):
                 reply(msg)
 
             elif text == '/statsprevmonth':
-                stats = reminderStore.getStats(str(chat_id))
+                stats = reminderStore.getStatsPrevMonth(str(chat_id))
                 msg = "Monthly stats\r\n"
                 msg += "User   :   number of messages  :   %\r\n"
                 msg += "----------------------------------"
