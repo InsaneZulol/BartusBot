@@ -63,7 +63,7 @@ def getStats(chat_id):
 
     n_array = []
     for row in all_rows:
-        n_array.append(row.username)
+        n_array.append(row.user_id)
     c = Counter( n_array )
     logging.info( str(c.items()) )
     sorted_array = sorted(c.items(), key=lambda user: user[1], reverse=True)
@@ -74,10 +74,19 @@ def getStats(chat_id):
 def getStatsPrevMonth(chat_id):
     chat_id = str(chat_id)
     date = datetime.datetime.now() - datetime.timedelta(seconds=60)
-    all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id='"+chat_id+"' AND date > DATETIME('"+date.strftime('%Y-%m-%d %H:%M:%S')+"')")
+    all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id=:1", chat_id)
+    #all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id='"+chat_id+"' AND date > DATETIME('"+date.strftime('%Y-%m-%d %H:%M:%S')+"')")
     n_array = []
     for row in all_rows:
         n_array.append(row.username)
     c = Counter( n_array )
     logging.info( str(c.items()) )
     return( c.items() )
+
+def getNameFromId(id):
+    id = str(id)
+    name = str(id)
+    query = db.GqlQuery("SELECT * FROM LogRow WHERE user_id=:1 LIMIT 1", id)
+    for row in query:
+        return row.username
+    return str(id)

@@ -269,7 +269,6 @@ class WebhookHandler(webapp2.RequestHandler):
                 reply(random.choice(plan.odpowiedzi))
             elif text == '/help' or text == '/pomoc':
                 reply(POMOC)
-                send_smth()
             elif text == '/wszyscy':
                 for chat in plan.chats:
                     #msg = random.choice(plan.odpowiedzi)
@@ -320,7 +319,7 @@ class WebhookHandler(webapp2.RequestHandler):
                     reminderStore.putReminderRow(_chat_id, _date_income, _date, _msg, _msg_id)
                     #reply(str(_date) + ":" + _msg)
                     #reply(_msg + ":" + _date.strftime("%Y-%m-%d %H:%M:%S"))
-                    reply("Spoko cumplu przypomne.")
+                    #reply("Spoko cumplu przypomne.")
                 except:
                     reply("Cos sie zepsulo i nie bylo cie slychac")
                     logging.info("Error in /remind")
@@ -359,8 +358,32 @@ class WebhookHandler(webapp2.RequestHandler):
                     count += row[1]
                 for row in stats:
                     percentage = (float(row[1])/float(count))*100.0
-                    msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+                    msg += "\r\n" + str(reminderStore.getNameFromId(row[0])) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
                 reply(msg)
+
+            elif text.startswith('/stats'):
+                logging.info(text)
+
+                try:
+                    temp = text
+                    _msg = temp[7:]
+                    logging.info("chat_id: \"" + _msg  + "\"")
+                    logging.info("chat_id: \"" + str(chat_id) + "\"")
+                    if len(_msg) < 1:
+                        _msg = "Bledny id"
+                    stats = reminderStore.getStats(str(_msg))
+                    msg = "User   :   number of messages  :   %\r\n"
+                    msg += "----------------------------------"
+                    count = 0
+                    stats2 = []
+                    for row in stats:
+                        count += row[1]
+                    for row in stats:
+                        percentage = (float(row[1])/float(count))*100.0
+                        msg += "\r\n" + str(reminderStore.getNameFromId(row[0])) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+                    reply(msg)
+                except:
+                    reply("Invalid chat_id")
 
             elif text == '/statsprevmonth':
                 stats = reminderStore.getStatsPrevMonth(str(chat_id))
