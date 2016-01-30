@@ -178,7 +178,10 @@ class WebhookHandler(webapp2.RequestHandler):
         # logging
         #logging.info("Author: " + fr + ". Chat: " + chat + ", id: " + chat_id)
         if text != "":
-            reminderStore.putLogRow(str(chat_id).decode('utf8'), str(user_id).decode('utf8'), str(user_name).decode('utf8'), str(chat_name).decode('utf8'), _date_income, str(text).decode('utf8'))
+            try:
+                reminderStore.putLogRow(str(chat_id).decode('utf8'), str(user_id).decode('utf8'), str(user_name).decode('utf8'), str(chat_name).decode('utf8'), _date_income, str(text).decode('utf8'))
+            except:
+                logging.error("Nie udalo sie zapisac wiadomosci")
 
         if chat_id not in plan.chats:
             plan.chats.append(chat_id)
@@ -319,102 +322,60 @@ class WebhookHandler(webapp2.RequestHandler):
                     reminderStore.putReminderRow(_chat_id, _date_income, _date, _msg, _msg_id)
                     #reply(str(_date) + ":" + _msg)
                     #reply(_msg + ":" + _date.strftime("%Y-%m-%d %H:%M:%S"))
-                    #reply("Spoko cumplu przypomne.")
+                    reply("Spoko cumplu przypomne.")
                 except:
                     reply("Cos sie zepsulo i nie bylo cie slychac")
                     logging.info("Error in /remind")
 
-            elif text == '/testremind':
-                x = 0
-                expired_rows = reminderStore.getExpiredRows()
-
-                for row in expired_rows:
-                    #logging.info(str(row.msg) + str(row.date))
-                    try:
-                        _msg = str(row.msg)
-                        _chat_id = str(row.chat_id)
-                        resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
-                            'chat_id': str(_chat_id),
-                            'text': _msg.encode('utf-8'),
-                            'disable_web_page_preview': 'true',
-                            'reply_to_message_id': str(row.msg_id),
-                        })).read()
-                    except:
-                        logging.info("Error in /testremind")
-
-
-                reminderStore.deleteReminds(expired_rows)
-
-            elif text == '/clearremind':
-                x = 1
-                #deleteAllRows()
-
             elif text == '/stats':
-                stats = reminderStore.getStats(str(chat_id))
-                msg = "User   :   number of messages  :   %\r\n"
-                msg += "----------------------------------"
-                count = 0
-                for row in stats:
-                    count += row[1]
-                for row in stats:
-                    percentage = (float(row[1])/float(count))*100.0
-                    msg += "\r\n" + str(reminderStore.getNameFromId(row[0])) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
-                reply(msg)
-
-            elif text.startswith('/stats'):
-                logging.info(text)
-
                 try:
-                    temp = text
-                    _msg = temp[7:]
-                    logging.info("chat_id: \"" + _msg  + "\"")
-                    logging.info("chat_id: \"" + str(chat_id) + "\"")
-                    if len(_msg) < 1:
-                        _msg = "Bledny id"
-                    stats = reminderStore.getStats(str(_msg))
-                    msg = "User   :   number of messages  :   %\r\n"
+                    stats = reminderStore.getStats(str(chat_id))
+                    msg = "Liczone od: 30 stycznia 2017, 17:00 \r\n"
+                    msg += "User   :   number of messages  :   %\r\n"
                     msg += "----------------------------------"
                     count = 0
-                    stats2 = []
                     for row in stats:
                         count += row[1]
                     for row in stats:
                         percentage = (float(row[1])/float(count))*100.0
-                        msg += "\r\n" + str(reminderStore.getNameFromId(row[0])) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+                        msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+                except:
+                    msg = "Statystyki nie sa dostepne"
+
+                reply(msg)
+
+            elif text.startswith('/stats'):
+                #logging.info(text)
+                try:
+                    temp = text
+                    _msg = temp[7:]
+                    #logging.info("chat_id: \"" + _msg  + "\"")
+                    #logging.info("chat_id: \"" + str(chat_id) + "\"")
+                    if len(_msg) < 1:
+                        _msg = "Bledny id"
+                    stats = reminderStore.getStats(str(_msg))
+                    msg = "Imie   :   ilosc wiadomosci  :   %\r\n"
+                    msg += "----------------------------------"
+                    count = 0
+                    for row in stats:
+                        count += row[1]
+                    for row in stats:
+                        percentage = (float(row[1])/float(count))*100.0
+                        msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+                    msg += "\r\nLiczone od: 30 stycznia 2017, 17:00"
                     reply(msg)
                 except:
-                    reply("Invalid chat_id")
-
-            elif text == '/statsprevmonth':
-                stats = reminderStore.getStatsPrevMonth(str(chat_id))
-                msg = "Monthly stats\r\n"
-                msg += "User   :   number of messages  :   %\r\n"
-                msg += "----------------------------------"
-                count = 0
-                for row in stats:
-                    count += row[1]
-                for row in stats:
-                    msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str((row[1]/count)*100) + "%"
-
-                resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
-                    'chat_id': str(chat_id),
-                    'text': msg.encode('utf-8'),
-                    'disable_web_page_preview': 'true',
-                })).read()
-
-
-        # if random.randint(0,1000) < 2:
-        #     reply(random.choice(plan.odpowiedzi))
-
-def deleteAllRows():
-    all_rows = reminderStore.getAllRows()
-    reminderStore.deleteReminds(all_rows)
+                    reply("Statystyki sa niedostepne")
 
 class ReminderTask(webapp2.RequestHandler):
     def get(self):
         #send_smth()
-        expired_rows = reminderStore.getExpiredRows()
-        logging.info("Reminder task")
+        try:
+            expired_rows = reminderStore.getExpiredRows()
+            logging.info("Reminder task")
+        except:
+            expired_rows = []
+            logging.info("Failed getting data in reminder")
 
         for row in expired_rows:
             #logging.info(str(row.msg) + str(row.date))
@@ -443,7 +404,11 @@ class ReminderTask(webapp2.RequestHandler):
 
 class StatsTask(webapp2.RequestHandler):
     def get(self):
-        stats = reminderStore.getStats(str(-100857893))
+        try:
+            stats = reminderStore.getStats(str(-100857893))
+        except:
+            stats = []
+
         msg = "Monthly stats\r\n"
         msg += "User   :   number of messages  :   %\r\n"
         msg += "----------------------------------"

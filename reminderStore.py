@@ -4,6 +4,7 @@ import logging
 import utils
 import webapp2
 from collections import Counter
+import main
 from datetime import timedelta
 
 class ReminderRow(db.Model):
@@ -51,25 +52,49 @@ class LogRow(db.Model):
     date = db.DateTimeProperty(auto_now_add=True)
     msg = db.TextProperty()
 
+class MessageCounter(db.Model):
+    chat_id = db.StringProperty()
+    user_id = db.StringProperty()
+    username = db.StringProperty()
+    count = db.IntegerProperty()
+
 def putLogRow(chat_id, user_id, username, chatname, date, msg):
     text = db.Text(msg)
     logging.info("Logging message")
     e = LogRow(chat_id=chat_id, user_id=user_id, username=username, chatname=chatname, date=date, msg=text)
+    q = MessageCounter.all()
+    q.filter('chat_id =', chat_id).filter('user_id =', user_id)
+    counter = q.get()
+    #counter = db.GqlQuery("SELECT * FROM MessageCounter WHERE chat_id=:1 AND user_id=:2", (chat_id,user_id))
+    if not counter:
+        counter = MessageCounter(chat_id = chat_id, user_id = user_id, username=username, count = 1)
+    else:
+        logging.info("UWAGA COUNTER TO: "+ str(counter.count))
+        counter.count += 1
     e.put()
+    counter.put()
 
 def getStats(chat_id):
+    # chat_id = str(chat_id)
+    # all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id=:1", chat_id)
+    #
+    # n_array = []
+    # for row in all_rows:
+    #     n_array.append(row.user_id)
+    # c = Counter( n_array )
+    # logging.info( str(c.items()) )
+    # sorted_array = sorted(c.items(), key=lambda user: user[1], reverse=True)
+    # logging.info(sorted_array)
+    # #return( c.items() )
+    # return( sorted_array )
     chat_id = str(chat_id)
-    all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id=:1", chat_id)
-
-    n_array = []
-    for row in all_rows:
-        n_array.append(row.user_id)
-    c = Counter( n_array )
-    logging.info( str(c.items()) )
-    sorted_array = sorted(c.items(), key=lambda user: user[1], reverse=True)
-    logging.info(sorted_array)
-    #return( c.items() )
-    return( sorted_array )
+    q = MessageCounter.all()
+    q.filter('chat_id =', chat_id)
+    #message_counters = q.get()
+    wynik = []
+    for row in q.run():
+        wynik.append((row.username, row.count))
+    return wynik
 
 def getStatsPrevMonth(chat_id):
     chat_id = str(chat_id)
@@ -84,9 +109,17 @@ def getStatsPrevMonth(chat_id):
     return( c.items() )
 
 def getNameFromId(id):
-    id = str(id)
-    name = str(id)
-    query = db.GqlQuery("SELECT * FROM LogRow WHERE user_id=:1 LIMIT 1", id)
-    for row in query:
-        return row.username
-    return str(id)
+    q = MessageCounter.all()
+    q.filter('user_id =', id)
+    user = q.get()
+    return user.username
+    # if id in main.USERNAMES:
+    #     return main.USERNAMES[str(id)]
+    # else:
+    #     return str(id)
+    #     # id = str(id)
+    #     # name = str(id)
+    #     # query = db.GqlQuery("SELECT * FROM LogRow WHERE user_id=:1 LIMIT 1", id)
+    #     # for row in query:
+    #     #     return row.username
+    #     # return str(id)
