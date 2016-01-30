@@ -330,8 +330,8 @@ class WebhookHandler(webapp2.RequestHandler):
             elif text == '/stats':
                 try:
                     stats = reminderStore.getStats(str(chat_id))
-                    msg = "Liczone od: 30 stycznia 2017, 17:00 \r\n"
-                    msg += "User   :   number of messages  :   %\r\n"
+                    #msg = "Liczone od: 30 stycznia 2017, 17:00 \r\n"
+                    msg = "User   :   number of messages  :   %\r\n"
                     msg += "----------------------------------"
                     count = 0
                     for row in stats:

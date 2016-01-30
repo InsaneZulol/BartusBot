@@ -94,6 +94,7 @@ def getStats(chat_id):
     wynik = []
     for row in q.run():
         wynik.append((row.username, row.count))
+    wynik.sort(key=lambda x: x[1], reverse=True)
     return wynik
 
 def getStatsPrevMonth(chat_id):
