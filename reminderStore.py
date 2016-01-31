@@ -58,6 +58,12 @@ class MessageCounter(db.Model):
     username = db.StringProperty()
     count = db.IntegerProperty()
 
+class WeekMessageCounter(db.Model):
+    chat_id = db.StringProperty()
+    user_id = db.StringProperty()
+    username = db.StringProperty()
+    count = db.IntegerProperty()
+
 def putLogRow(chat_id, user_id, username, chatname, date, msg):
     text = db.Text(msg)
     logging.info("Logging message")
@@ -71,8 +77,18 @@ def putLogRow(chat_id, user_id, username, chatname, date, msg):
     else:
         logging.info("UWAGA COUNTER TO: "+ str(counter.count))
         counter.count += 1
+
+    w_q = WeekMessageCounter.all()
+    w_q.filter('chat_id =', chat_id).filter('user_id =', user_id)
+    w_counter = w_q.get()
+    if not w_counter:
+        w_counter = WeekMessageCounter(chat_id = chat_id, user_id = user_id, username=username, count = 1)
+    else:
+        w_counter.count += 1
+
     e.put()
     counter.put()
+    w_counter.put()
 
 def getStats(chat_id):
     # chat_id = str(chat_id)
@@ -97,17 +113,22 @@ def getStats(chat_id):
     wynik.sort(key=lambda x: x[1], reverse=True)
     return wynik
 
-def getStatsPrevMonth(chat_id):
+def getWeekStats(chat_id):
     chat_id = str(chat_id)
-    date = datetime.datetime.now() - datetime.timedelta(seconds=60)
-    all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id=:1", chat_id)
-    #all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id='"+chat_id+"' AND date > DATETIME('"+date.strftime('%Y-%m-%d %H:%M:%S')+"')")
-    n_array = []
+    q = WeekMessageCounter.all()
+    q.filter('chat_id =', chat_id)
+    #message_counters = q.get()
+    wynik = []
+    for row in q.run():
+        wynik.append((row.username, row.count))
+    wynik.sort(key=lambda x: x[1], reverse=True)
+    return wynik
+
+def resetWeekStats():
+    all_rows = db.GqlQuery("SELECT * FROM WeekMessageCounter")
     for row in all_rows:
-        n_array.append(row.username)
-    c = Counter( n_array )
-    logging.info( str(c.items()) )
-    return( c.items() )
+        logging.info("Resetowanie tygodniowych statystyl")
+        db.delete(row)
 
 def getNameFromId(id):
     q = MessageCounter.all()

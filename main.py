@@ -344,6 +344,23 @@ class WebhookHandler(webapp2.RequestHandler):
 
                 reply(msg)
 
+            elif text == '/weekstats':
+                try:
+                    stats = reminderStore.getWeekStats(str(chat_id))
+                    #msg = "Liczone od: 30 stycznia 2017, 17:00 \r\n"
+                    msg = "User   :   number of messages  :   %\r\n"
+                    msg += "----------------------------------"
+                    count = 0
+                    for row in stats:
+                        count += row[1]
+                    for row in stats:
+                        percentage = (float(row[1])/float(count))*100.0
+                        msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+                except:
+                    msg = "Statystyki nie sa dostepne"
+
+                reply(msg)
+
             elif text.startswith('/stats'):
                 #logging.info(text)
                 try:
@@ -362,10 +379,31 @@ class WebhookHandler(webapp2.RequestHandler):
                     for row in stats:
                         percentage = (float(row[1])/float(count))*100.0
                         msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
-                    msg += "\r\nLiczone od: 30 stycznia 2017, 17:00"
                     reply(msg)
                 except:
                     reply("Statystyki sa niedostepne")
+
+            elif text.startswith('/weekstats'):
+                #logging.info(text)
+                try:
+                    temp = text
+                    _msg = temp[7:]
+                    #logging.info("chat_id: \"" + _msg  + "\"")
+                    #logging.info("chat_id: \"" + str(chat_id) + "\"")
+                    if len(_msg) < 1:
+                        _msg = "Bledny id"
+                    stats = reminderStore.getWeekStats(str(_msg))
+                    msg = "Imie   :   ilosc wiadomosci  :   %\r\n"
+                    msg += "----------------------------------"
+                    count = 0
+                    for row in stats:
+                        count += row[1]
+                    for row in stats:
+                        percentage = (float(row[1])/float(count))*100.0
+                        msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+                    reply(msg)
+                except:
+                    reply("Tygodniowe statystyki sa niedostepne")
 
 class ReminderTask(webapp2.RequestHandler):
     def get(self):
@@ -402,33 +440,30 @@ class ReminderTask(webapp2.RequestHandler):
             except:
                 logging.info("Error in sending")
 
-class StatsTask(webapp2.RequestHandler):
+class WeekStatsTask(webapp2.RequestHandler):
     def get(self):
-        try:
-            stats = reminderStore.getStats(str(-100857893))
-        except:
-            stats = []
+        for chat_id in plan.chats:
+            try:
+                stats = reminderStore.getWeekStats(str(chat_id))
+                #msg = "Liczone od: 30 stycznia 2017, 17:00 \r\n"
+                msg = "User   :   number of messages  :   %\r\n"
+                msg += "----------------------------------"
+                count = 0
+                for row in stats:
+                    count += row[1]
+                for row in stats:
+                    percentage = (float(row[1])/float(count))*100.0
+                    msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+            except:
+                msg = "Statystyki nie sa dostepne"
 
-        msg = "Monthly stats\r\n"
-        msg += "User   :   number of messages  :   %\r\n"
-        msg += "----------------------------------"
-        count = 0
-        for row in stats:
-            count += row[1]
-        for row in stats:
-            msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str((row[1]/count)*100) + "%"
+            resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
+                'chat_id': str(-100857893),
+                'text': msg.encode('utf-8'),
+                'disable_web_page_preview': 'true',
+            })).read()
 
-        resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
-            'chat_id': str(-100857893),
-            'text': msg.encode('utf-8'),
-            'disable_web_page_preview': 'true',
-        })).read()
-
-class ReminderQueue(webapp2.RequestHandler):
-    def get(self):
-        logging.info("Jestem w kolejce")
-        taskqueue.add(url='/remindertask', method="GET")
-        taskqueue.add(url='/remindertask', method="GET", coundown=30)
+        reminderStore.resetWeekStats()
 
 
 
@@ -439,5 +474,5 @@ app = webapp2.WSGIApplication([
     ('/webhook', WebhookHandler),
     ('/remindertask', ReminderTask),
     ('/reminderqueue', ReminderTask),
-    ('/statstask', StatsTask),
+    ('/weekstats', WeekStatsTask),
 ], debug=True)
