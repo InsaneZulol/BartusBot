@@ -351,7 +351,7 @@ class WebhookHandler(webapp2.RequestHandler):
             elif text == '/stats':
                 try:
                     stats = reminderStore.getStats(str(chat_id))
-                    #msg = "Liczone od: 30 stycznia 2017, 17:00 \r\n"
+
                     msg = "User   :   number of messages  :   %\r\n"
                     msg += "----------------------------------"
                     count = 0
@@ -360,6 +360,9 @@ class WebhookHandler(webapp2.RequestHandler):
                     for row in stats:
                         percentage = (float(row[1])/float(count))*100.0
                         msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+
+                    msg += "\r\n----------------------------------"
+                    msg += "\r\nLiczone od: 30 stycznia 2017, 17:00 \r\n"
                 except:
                     msg = "Statystyki nie sa dostepne"
 
@@ -377,6 +380,9 @@ class WebhookHandler(webapp2.RequestHandler):
                     for row in stats:
                         percentage = (float(row[1])/float(count))*100.0
                         msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+
+                    msg += "\r\n----------------------------------"
+                    msg += "\r\nLiczone od ostatniej niedzieli \r\n"
                 except:
                     msg = "Statystyki nie sa dostepne"
 
@@ -479,7 +485,7 @@ class WeekStatsTask(webapp2.RequestHandler):
                 msg = "Statystyki nie sa dostepne"
 
             resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
-                'chat_id': str(-100857893),
+                'chat_id': str(chat_id),
                 'text': msg.encode('utf-8'),
                 'disable_web_page_preview': 'true',
             })).read()
