@@ -7,6 +7,7 @@
 Oprócz bibliotek używanych przez [telebot](https://github.com/yukuku/telebot) (repozytorium startowe) używamy takich bibliotek jak:
 - [beautifulsoup4](http://www.crummy.com/software/BeautifulSoup/bs4/doc/) - do parsowania stron www (wykorzystywane w parsowaniu planu)
 - [facebook-sdk](https://github.com/pythonforfacebook/facebook-sdk) - do komunikacji z facebookiem
+- [parsedatetime](https://pypi.python.org/pypi/parsedatetime/) - do parsowania dat w reminderze
 
 ## Planowane funkcjonalności
 Wszystkie planowane funcjonalności do wprowadzenia można sprawdzić [tutaj](https://github.com/r3tard/BartusBot/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement)
@@ -29,3 +30,4 @@ Komenda | Opis
 `/d`    | Wyświetla plan na dzisiaj
 `/remind data "wiadomosc"` | Przypomnienie wiadomosc o danej dacie w formie 1d, 1m, tomorrow, eod etc.
 `/stats` | Wyświetla statystyki czatu (użytkownik, ilość wiadomości, procent udziału wiadomości)
+`/weekstats` | Wyświetla statystyki czatu liczone od poprzedniej niedzieli
