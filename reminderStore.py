@@ -8,6 +8,9 @@ import main
 from datetime import timedelta
 
 class ReminderRow(db.Model):
+    """
+    Tabela w Datastore do przechowywania przypomnien
+    """
     chat_id = db.StringProperty()
     date_income = db.DateTimeProperty(auto_now_add=True)
     date = db.DateTimeProperty()
@@ -15,11 +18,24 @@ class ReminderRow(db.Model):
     msg_id = db.StringProperty()
 
 def putReminderRow(_chat_id, _date_income, _date, _msg, _msg_id):
+    """
+    Metoda dodajaca przypomnienie do bazy
+    :param _chat_id:
+    :param _date_income:
+    :param _date:
+    :param _msg:
+    :param _msg_id:
+    :return:
+    """
     logging.info("Adding row")
     e = ReminderRow(chat_id=_chat_id, date_income=_date_income, date=_date, msg=_msg, msg_id=_msg_id)
     e.put()
 
 def getExpiredRows():
+    """
+    Metoda zwracajaca przeterminowane, wygasle przypomnienia, czyli te ktore nalezy wyslac
+    :return:
+    """
     date = datetime.datetime.now()
     logging.info("reminderStore: " + "DATETIME('"+date.strftime('%Y-%m-%d %H:%M:%S')+"')")
     expired_rows = db.GqlQuery("SELECT * FROM ReminderRow WHERE date < DATETIME('"+date.strftime('%Y-%m-%d %H:%M:%S')+"')")
@@ -31,20 +47,37 @@ def getExpiredRows():
     return expired_rows
 
 def getAllRows():
+    """
+    Zwraca wszystkie przypomnienia
+    :return:
+    """
     all_rows = db.GqlQuery("SELECT * FROM ReminderRow")
     return all_rows
 
 def deleteReminds(expired_rows):
+    """
+    Usuwa podane przypomnienia
+    :param expired_rows:
+    :return:
+    """
     for row in expired_rows:
         logging.info("Usuwanie")
         db.delete(row)
 
 def deleteRemind(row):
+    """
+    Usuwa pojedyncze przypomnienie
+    :param row:
+    :return:
+    """
     logging.info("Usuwanie")
     db.delete(row)
 
 
 class LogRow(db.Model):
+    """
+    Tabela z logami wiadomosci
+    """
     chat_id = db.StringProperty()
     user_id = db.StringProperty()
     username = db.StringProperty()
@@ -53,18 +86,34 @@ class LogRow(db.Model):
     msg = db.TextProperty()
 
 class MessageCounter(db.Model):
+    """
+    Tabela ze statystykami
+    """
     chat_id = db.StringProperty()
     user_id = db.StringProperty()
     username = db.StringProperty()
     count = db.IntegerProperty()
 
 class WeekMessageCounter(db.Model):
+    """
+    Tabela z tygodniowymi statystykami
+    """
     chat_id = db.StringProperty()
     user_id = db.StringProperty()
     username = db.StringProperty()
     count = db.IntegerProperty()
 
 def putLogRow(chat_id, user_id, username, chatname, date, msg):
+    """
+    Dodawanie wiadomosci do tabeli z logami
+    :param chat_id:
+    :param user_id:
+    :param username:
+    :param chatname:
+    :param date:
+    :param msg:
+    :return:
+    """
     text = db.Text(msg)
     logging.info("Logging message")
     e = LogRow(chat_id=chat_id, user_id=user_id, username=username, chatname=chatname, date=date, msg=text)
@@ -91,18 +140,11 @@ def putLogRow(chat_id, user_id, username, chatname, date, msg):
     w_counter.put()
 
 def getStats(chat_id):
-    # chat_id = str(chat_id)
-    # all_rows = db.GqlQuery("SELECT * FROM LogRow WHERE chat_id=:1", chat_id)
-    #
-    # n_array = []
-    # for row in all_rows:
-    #     n_array.append(row.user_id)
-    # c = Counter( n_array )
-    # logging.info( str(c.items()) )
-    # sorted_array = sorted(c.items(), key=lambda user: user[1], reverse=True)
-    # logging.info(sorted_array)
-    # #return( c.items() )
-    # return( sorted_array )
+    """
+    Pobieranie statystyk
+    :param chat_id:
+    :return:
+    """
     chat_id = str(chat_id)
     q = MessageCounter.all()
     q.filter('chat_id =', chat_id)
@@ -114,6 +156,11 @@ def getStats(chat_id):
     return wynik
 
 def getWeekStats(chat_id):
+    """
+    Pobieranie tygodniowych statystyk
+    :param chat_id:
+    :return:
+    """
     chat_id = str(chat_id)
     q = WeekMessageCounter.all()
     q.filter('chat_id =', chat_id)
@@ -125,23 +172,22 @@ def getWeekStats(chat_id):
     return wynik
 
 def resetWeekStats():
+    """
+    Resetowanie tygodniowych staystyk
+    :return:
+    """
     all_rows = db.GqlQuery("SELECT * FROM WeekMessageCounter")
     for row in all_rows:
         logging.info("Resetowanie tygodniowych statystyl")
         db.delete(row)
 
 def getNameFromId(id):
+    """
+    Pobieranie nazwy dla danego user_id
+    :param id:
+    :return:
+    """
     q = MessageCounter.all()
     q.filter('user_id =', id)
     user = q.get()
     return user.username
-    # if id in main.USERNAMES:
-    #     return main.USERNAMES[str(id)]
-    # else:
-    #     return str(id)
-    #     # id = str(id)
-    #     # name = str(id)
-    #     # query = db.GqlQuery("SELECT * FROM LogRow WHERE user_id=:1 LIMIT 1", id)
-    #     # for row in query:
-    #     #     return row.username
-    #     # return str(id)
