@@ -94,6 +94,14 @@ class MessageCounter(db.Model):
     username = db.StringProperty()
     count = db.IntegerProperty()
 
+class NicknamesInChats(db.Model):
+    """
+    Tabela ze statystykami
+    """
+    chat_id = db.StringProperty()
+    user_id = db.StringProperty()
+    nickname = db.StringProperty()
+
 class WeekMessageCounter(db.Model):
     """
     Tabela z tygodniowymi statystykami
@@ -103,7 +111,7 @@ class WeekMessageCounter(db.Model):
     username = db.StringProperty()
     count = db.IntegerProperty()
 
-def putLogRow(chat_id, user_id, username, chatname, date, msg):
+def putLogRow(chat_id, user_id, username, chatname, date, msg, nickname):
     """
     Dodawanie wiadomosci do tabeli z logami
     :param chat_id:
@@ -117,6 +125,8 @@ def putLogRow(chat_id, user_id, username, chatname, date, msg):
     text = db.Text(msg)
     logging.info("Logging message")
     e = LogRow(chat_id=chat_id, user_id=user_id, username=username, chatname=chatname, date=date, msg=text)
+
+    # Statystyki wiadomosci
     q = MessageCounter.all()
     q.filter('chat_id =', chat_id).filter('user_id =', user_id)
     counter = q.get()
@@ -126,6 +136,15 @@ def putLogRow(chat_id, user_id, username, chatname, date, msg):
     else:
         logging.info("UWAGA COUNTER TO: "+ str(counter.count))
         counter.count += 1
+
+    # Do listy uzytkownikow chatu
+    if nickname != "":
+        n = NicknamesInChats.all()
+        n.filter('chat_id =', chat_id).filter('user_id =', user_id)
+        nickname_o = n.get()
+        if not nickname_o:
+            nickname_o = NicknamesInChats(chat_id=chat_id, user_id=user_id, nickname=nickname)
+        nickname_o.put()
 
     w_q = WeekMessageCounter.all()
     w_q.filter('chat_id =', chat_id).filter('user_id =', user_id)
@@ -138,6 +157,15 @@ def putLogRow(chat_id, user_id, username, chatname, date, msg):
     e.put()
     counter.put()
     w_counter.put()
+
+def getNicknames(chat_id):
+    chat_id = str(chat_id)
+    q = NicknamesInChats.all()
+    q.filter('chat_id =', chat_id)
+    wynik = []
+    for row in q.run():
+        wynik.append(row.nickname)
+    return wynik
 
 def getStats(chat_id):
     """

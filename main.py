@@ -178,6 +178,12 @@ class WebhookHandler(webapp2.RequestHandler):
             text = message.get('text')
         fr = message.get('from')
         user_id = fr['id']
+
+        try:
+            nickname = fr['username']
+        except:
+            nickname = ""
+
         try:
             first_name = fr['first_name']
         except:
@@ -200,7 +206,7 @@ class WebhookHandler(webapp2.RequestHandler):
         #logging.info("Author: " + fr + ". Chat: " + chat + ", id: " + chat_id)
         if text != "":
             try:
-                reminderStore.putLogRow(str(chat_id).decode('utf8'), str(user_id).decode('utf8'), str(user_name).decode('utf8'), str(chat_name).decode('utf8'), _date_income, str(text).decode('utf8'))
+                reminderStore.putLogRow(str(chat_id).decode('utf8'), str(user_id).decode('utf8'), str(user_name).decode('utf8'), str(chat_name).decode('utf8'), _date_income, str(text).decode('utf8'), str(nickname).decode('utf8'))
             except:
                 logging.error("Nie udalo sie zapisac wiadomosci")
 
@@ -293,7 +299,14 @@ class WebhookHandler(webapp2.RequestHandler):
                 reply(random.choice(plan.odpowiedzi))
             elif text == '/help' or text == '/pomoc':
                 reply(POMOC)
-            elif text == '/wszyscy':
+            elif text == '/wolaj' or text == "/wszyscy" or text == "/wolam":
+                nicknames = reminderStore.getNicknames(chat_id)
+                msg = "Wolam: "
+                for nickname in nicknames:
+                    msg += "@"+str(nickname) + " "
+                reply(msg)
+
+            elif text == '/wszyscy_wolaj':
                 for chat in plan.chats:
                     #msg = random.choice(plan.odpowiedzi)
                     msg = "Chat id's: "
