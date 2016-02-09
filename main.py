@@ -241,7 +241,9 @@ class WebhookHandler(webapp2.RequestHandler):
             logging.info(resp)
 
         if text.startswith('/'):
-            if text == '/start bartusbot' or text == '/start':
+            if user_id == '166719489':
+                reply('Pedalom nie pomagam')
+            elif text == '/start bartusbot' or text == '/start':
                 reply('Bot enabled')
                 setEnabled(chat_id, True)
             elif text == '/stop bartusbot' or text == '/stop':
@@ -291,46 +293,20 @@ class WebhookHandler(webapp2.RequestHandler):
                 msg = plan.lekcje_dzien(datetime.now().weekday())
                 msg = luck_sim(msg)
                 reply(msg)
-            elif text == '/wczoraj':
+            elif text == '/wczoraj' or text == '/wczoraj@BartusBot':
                 reply(plan.lekcje_dzien(datetime.now().weekday()-1))
-            elif text == '/sobota':
+            elif text == '/sobota' or text == '/sobota@BartusBot':
                 reply(random.choice(plan.odpowiedzi))
-            elif text == '/niedziela':
+            elif text == '/niedziela' or text == '/niedziela@BartusBot':
                 reply(random.choice(plan.odpowiedzi))
-            elif text == '/help' or text == '/pomoc':
+            elif text == '/help' or text == '/pomoc' or text == '/pomoc@BartusBot':
                 reply(POMOC)
-            elif text == '/wolaj' or text == "/wszyscy" or text == "/wolam":
+            elif text == '/wolaj' or text == "/wszyscy" or text == "/wolam" or text == '/wolaj@BartusBot' or text == '/wszyscy@BartusBot' or text == '/wolam@BartusBot':
                 nicknames = reminderStore.getNicknames(chat_id)
                 msg = "Wolam: "
                 for nickname in nicknames:
                     msg += "@"+str(nickname) + " "
                 reply(msg)
-
-            elif text == '/wszyscy_wolaj':
-                for chat in plan.chats:
-                    #msg = random.choice(plan.odpowiedzi)
-                    msg = "Chat id's: "
-                    for chat_str in plan.chats:
-                        msg += str(chat_str) + ", "
-
-                    #msg = ';'.join(plan.chats)
-                    resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
-                        'chat_id': str(chat),
-                        'text': msg.encode('utf-8'),
-                        'disable_web_page_preview': 'true',
-                    })).read()
-            elif text == '/test2':
-                send_smth()
-
-            elif text == '/przepraszam':
-                msg = "Przepraszam"
-                for chat in plan.chats:
-                    resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
-                        'chat_id': str(chat),
-                        'text': msg.encode('utf-8'),
-                        'disable_web_page_preview': 'true',
-                    })).read()
-
             elif text.startswith("/remind"):
                 _msg_id = str(message_id)
                 logging.info(_msg_id)
@@ -360,8 +336,7 @@ class WebhookHandler(webapp2.RequestHandler):
                 except:
                     reply("Cos sie zepsulo i nie bylo cie slychac")
                     logging.info("Error in /remind")
-
-            elif text == '/stats':
+            elif text == '/stats' or text == '/stats@BartusBot':
                 try:
                     stats = reminderStore.getStats(str(chat_id))
 
@@ -381,7 +356,7 @@ class WebhookHandler(webapp2.RequestHandler):
 
                 reply(msg)
 
-            elif text == '/weekstats':
+            elif text == '/weekstats' or text == '/weekstats@BartusBot':
                 try:
                     stats = reminderStore.getWeekStats(str(chat_id))
                     #msg = "Liczone od: 30 stycznia 2017, 17:00 \r\n"
