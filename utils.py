@@ -4,6 +4,8 @@ import urllib2
 import datetime
 import threading
 import time
+import logging
+import json
 from bs4 import BeautifulSoup
 
 class Plan(object):
@@ -17,6 +19,8 @@ class Plan(object):
         self.plan_url = "http://www.sci.edu.pl/plan/plany/o12.html"
         self.godziny = self.pobierz_godziny()
         self.lekcje = self.pobierz_lekcje()
+        logging.info("lekcje")
+        logging.info(self.lekcje)
         self.odpowiedzi = [
             "Kuurwa spok",
             "Ty stara kurwo zmarnowałaś mi 25 lat zycia",
@@ -33,6 +37,16 @@ class Plan(object):
         ]
         self.chats = []
         self.unlucky = "Aaaaaaaaa nie dla psa dla pana to"
+
+    def aktualizuj(self):
+        """
+        Metoda aktualizuje plan
+        """
+        self.plan_url = "http://www.sci.edu.pl/plan/plany/o12.html"
+        self.godziny = self.pobierz_godziny()
+        self.lekcje = self.pobierz_lekcje()
+        logging.info("lekcje")
+        logging.info(self.lekcje)
 
     def pobierz_godziny(self):
         """
@@ -81,6 +95,7 @@ class Plan(object):
                 if(len(lekcja)==0):
                     plan[godzina].append("")
                 for przedmiot in lekcja:
+                    #logging.info(przedmiot.string)
                     if(len(sala)==0):
                         plan[godzina].append(przedmiot.string)
                     else:
@@ -88,7 +103,9 @@ class Plan(object):
                 dzien += 1
             godzina += 1
 
-        plan = plan[3:13]
+        logging.info(json.loads(json.dumps(plan)))
+        plan = plan[3:]
+        #logging.info(json.loads(plan))
         return plan
 
     def lekcje_dzien(self, dzien):
@@ -106,7 +123,8 @@ class Plan(object):
         wynik = ""
         index = 0
 
-        for i in range(0,10):
+        # TODO Range wczesniej 10 i wywalal
+        for i in range(0,9):
             lekcja = self.lekcje[i][dzien]
             wynik += self.godziny[index][0] + "-" + self.godziny[index][1] + ": " + lekcja + "\r\n"
 
@@ -136,7 +154,7 @@ class Plan(object):
 
         # Zapobiega odwolywania sie do nieistniejacego indexu
         # Nie mamy w planie danych dla godziny wiecej niz 10tej
-        if nr_lekcji > 9:
+        if nr_lekcji > 8:
             nr_lekcji = 0
 
         return self.lekcje[nr_lekcji][dzien]

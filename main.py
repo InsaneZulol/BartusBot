@@ -267,31 +267,27 @@ class WebhookHandler(webapp2.RequestHandler):
                 msg = luck_sim(random.choice(plan.odpowiedzi))
                 reply(msg)
             elif text == '/poniedzialek' or text == '/pon' or text == '/pon@BartusBot' :
-                msg = luck_sim(plan.lekcje_dzien(0))
+                msg = plan.lekcje_dzien(0)
                 reply(msg)
             elif text == '/wtorek' or text == '/wt' or text == '/wt@BartusBot':
-                msg = luck_sim(plan.lekcje_dzien(1))
+                msg = plan.lekcje_dzien(1)
                 reply(msg)
             elif text == '/sroda' or text == '/sr' or text == '/sr@BartusBot':
-                msg = luck_sim(plan.lekcje_dzien(2))
+                msg = plan.lekcje_dzien(2)
                 reply(msg)
             elif text == '/czwartek' or text == '/cz' or text == '/cz@BartusBot':
-                msg = luck_sim(plan.lekcje_dzien(3))
+                msg = plan.lekcje_dzien(3)
                 reply(msg)
             elif text == '/piatek' or text == '/pt' or text == '/pt@BartusBot':
-                msg = luck_sim()
                 reply(plan.lekcje_dzien(4))
             elif text == '/jutro' or text == '/j' or text == '/j@BartusBot':
                 msg = plan.lekcje_dzien(datetime.now().weekday()+1)
-                msg = luck_sim(msg)
                 reply(msg)
             elif text == '/nastepna' or text == '/n' or text == '/n@BartusBot':
                 msg = plan.nastepna_lekcja()
-                msg = luck_sim(msg)
                 reply(msg)
             elif text == '/dzisiaj' or text == '/d' or text == '/d@BartusBot':
                 msg = plan.lekcje_dzien(datetime.now().weekday())
-                msg = luck_sim(msg)
                 reply(msg)
             elif text == '/wczoraj' or text == '/wczoraj@BartusBot':
                 reply(plan.lekcje_dzien(datetime.now().weekday()-1))
@@ -309,7 +305,6 @@ class WebhookHandler(webapp2.RequestHandler):
                 reply(msg)
             elif text.startswith("/remind"):
                 _msg_id = str(message_id)
-                logging.info(_msg_id)
                 try:
                     temp = text
                     temp = temp[temp.find(" ")+1:]
@@ -355,6 +350,9 @@ class WebhookHandler(webapp2.RequestHandler):
                     msg = "Statystyki nie sa dostepne"
 
                 reply(msg)
+
+            elif text == '/plan' or text == '/plan@BartuBot':
+                plan.aktualizuj()
 
             elif text == '/weekstats' or text == '/weekstats@BartusBot':
                 try:
