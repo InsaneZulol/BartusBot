@@ -4,4 +4,4 @@ cron:
   schedule: every 1 minutes
 - description : post stats
   url : /weekstats
-  schedule: every sunday 22:37
+  schedule: every sunday 20:37
