@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import sys
-import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
@@ -12,18 +11,10 @@ import logging
 import random
 import urllib
 import urllib2
-import requests
-import warnings
-import datetime
 import utils
-import threading
-import time
 import parsedatetime
-import pytz
-from pytz import timezone
 from time import mktime
 from datetime import datetime, timedelta
-from google.appengine.api import taskqueue
 import reminderStore
 
 # standard app engine imports
@@ -214,163 +205,163 @@ class WebhookHandler(webapp2.RequestHandler):
 
             logging.info('send response:')
             logging.info(resp)
-
-        if text.startswith('/'):
-            if text == '/start bartusbot' or text == '/start':
-                reply('Bot enabled')
-                setEnabled(chat_id, True)
-            elif text == '/stop bartusbot' or text == '/stop':
-                reply('Bot disabled')
-                setEnabled(chat_id, False)
-            if getEnabled(chat_id):
-                if text == '/poniedzialek' or text == '/pon' or text == '/pon@BartusBot' :
-                    msg = plan.lekcje_dzien(0)
-                    reply(msg)
-                elif text == '/wtorek' or text == '/wt' or text == '/wt@BartusBot':
-                    msg = plan.lekcje_dzien(1)
-                    reply(msg)
-                elif text == '/sroda' or text == '/sr' or text == '/sr@BartusBot':
-                    msg = plan.lekcje_dzien(2)
-                    reply(msg)
-                elif text == '/czwartek' or text == '/cz' or text == '/cz@BartusBot':
-                    msg = plan.lekcje_dzien(3)
-                    reply(msg)
-                elif text == '/piatek' or text == '/pt' or text == '/pt@BartusBot':
-                    reply(plan.lekcje_dzien(4))
-                elif text == '/jutro' or text == '/j' or text == '/j@BartusBot':
-                    msg = plan.lekcje_dzien(datetime.now().weekday()+1)
-                    reply(msg)
-                elif text == '/nastepna' or text == '/n' or text == '/n@BartusBot':
-                    msg = plan.nastepna_lekcja()
-                    reply(msg)
-                elif text == '/dzisiaj' or text == '/d' or text == '/d@BartusBot':
-                    msg = plan.lekcje_dzien(datetime.now().weekday())
-                    reply(msg)
-                elif text == '/wczoraj' or text == '/wczoraj@BartusBot':
-                    reply(plan.lekcje_dzien(datetime.now().weekday()-1))
-                elif text == '/sobota' or text == '/sobota@BartusBot':
-                    reply(random.choice(plan.odpowiedzi))
-                elif text == '/niedziela' or text == '/niedziela@BartusBot':
-                    reply(random.choice(plan.odpowiedzi))
-                elif text == '/help' or text == '/pomoc' or text == '/pomoc@BartusBot':
-                    reply(POMOC)
-                elif text == '/wolaj' or text == "/wszyscy" or text == "/wolam" or text == '/wolaj@BartusBot' or text == '/wszyscy@BartusBot' or text == '/wolam@BartusBot':
-                    nicknames = reminderStore.getNicknames(chat_id)
-                    msg = "Wolam: "
-                    for nickname in nicknames:
-                        msg += "@"+str(nickname) + " "
-                    reply(msg)
-                elif text.startswith("/remind"):
-                    _msg_id = str(message_id)
-                    try:
-                        temp = text
-                        temp = temp[temp.find(" ")+1:]
-                        _date_temp = temp[:temp.find("\"")]
-                        _msg = temp[len(_date_temp)+1:len(temp)-1]
-                        if len(_msg) < 1:
-                            _msg = "Prawilnie przypominam"
-                        #_msg = temp[temp.find(" ")+1:]
-                        _date = datetime.now()
-                        _date_income = datetime.fromtimestamp(int(date))
-                        _chat_id = str(chat_id)
-
-                        cal = parsedatetime.Calendar()
-                        cal.parse(_date_temp)
-
-                        time_struct, parse_status = cal.parse(_date_temp)
-                        _date = datetime.fromtimestamp(mktime(time_struct))
-                        #_date, _ = cal.parseDT(datetimeString=_date_temp, tzinfo=pytz.timezone("Europe/Warsaw"))
-
-                        reminderStore.putReminderRow(_chat_id, _date_income, _date, _msg, _msg_id)
-                        #reply(str(_date) + ":" + _msg)
-                        #reply(_msg + ":" + _date.strftime("%Y-%m-%d %H:%M:%S"))
-                        reply("Spoko cumplu przypomne.")
-                    except:
-                        reply("Cos sie zepsulo i nie bylo cie slychac")
-                        logging.info("Error in /remind")
-                elif text == '/stats' or text == '/stats@BartusBot':
-                    try:
-                        stats = reminderStore.getStats(str(chat_id))
-
-                        msg = "User   :   number of messages  :   %\r\n"
-                        msg += "----------------------------------"
-                        count = 0
-                        for row in stats:
-                            count += row[1]
-                        for row in stats:
-                            percentage = (float(row[1])/float(count))*100.0
-                            msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
-
-                        msg += "\r\n----------------------------------"
-                        msg += "\r\nLiczone od: 30 stycznia 2017, 17:00 \r\n"
-                    except:
-                        msg = "Statystyki nie sa dostepne"
-
-                    reply(msg)
-
-                elif text == '/plan' or text == '/plan@BartuBot':
-                    plan.aktualizuj()
-
-                elif text == '/weekstats' or text == '/weekstats@BartusBot':
-                    try:
-                        stats = reminderStore.getWeekStats(str(chat_id))
-                        #msg = "Liczone od: 30 stycznia 2017, 17:00 \r\n"
-                        msg = "User   :   number of messages  :   %\r\n"
-                        msg += "----------------------------------"
-                        count = 0
-                        for row in stats:
-                            count += row[1]
-                        for row in stats:
-                            percentage = (float(row[1])/float(count))*100.0
-                            msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
-
-                        msg += "\r\n----------------------------------"
-                        msg += "\r\nLiczone od ostatniej niedzieli \r\n"
-                    except:
-                        msg = "Statystyki nie sa dostepne"
-
-                    reply(msg)
-
-                elif text.startswith('/stats'):
-                    try:
-                        temp = text
-                        _msg = temp[7:]
-                        if len(_msg) < 1:
-                            _msg = "Bledny id"
-                        stats = reminderStore.getStats(str(_msg))
-                        msg = "Imie   :   ilosc wiadomosci  :   %\r\n"
-                        msg += "----------------------------------"
-                        count = 0
-                        for row in stats:
-                            count += row[1]
-                        for row in stats:
-                            percentage = (float(row[1])/float(count))*100.0
-                            msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+        if text:
+            if text.startswith('/'):
+                if text == '/start bartusbot' or text == '/start':
+                    reply('Bot enabled')
+                    setEnabled(chat_id, True)
+                elif text == '/stop bartusbot' or text == '/stop':
+                    reply('Bot disabled')
+                    setEnabled(chat_id, False)
+                if getEnabled(chat_id):
+                    if text == '/poniedzialek' or text == '/pon' or text == '/pon@BartusBot' :
+                        msg = plan.lekcje_dzien(0)
                         reply(msg)
-                    except:
-                        reply("Statystyki sa niedostepne")
-
-                elif text.startswith('/weekstats'):
-                    try:
-                        temp = text
-                        _msg = temp[7:]
-                        if len(_msg) < 1:
-                            _msg = "Bledny id"
-                        stats = reminderStore.getWeekStats(str(_msg))
-                        msg = "Imie   :   ilosc wiadomosci  :   %\r\n"
-                        msg += "----------------------------------"
-                        count = 0
-                        for row in stats:
-                            count += row[1]
-                        for row in stats:
-                            percentage = (float(row[1])/float(count))*100.0
-                            msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+                    elif text == '/wtorek' or text == '/wt' or text == '/wt@BartusBot':
+                        msg = plan.lekcje_dzien(1)
                         reply(msg)
-                    except:
-                        reply("Tygodniowe statystyki sa niedostepne")
+                    elif text == '/sroda' or text == '/sr' or text == '/sr@BartusBot':
+                        msg = plan.lekcje_dzien(2)
+                        reply(msg)
+                    elif text == '/czwartek' or text == '/cz' or text == '/cz@BartusBot':
+                        msg = plan.lekcje_dzien(3)
+                        reply(msg)
+                    elif text == '/piatek' or text == '/pt' or text == '/pt@BartusBot':
+                        reply(plan.lekcje_dzien(4))
+                    elif text == '/jutro' or text == '/j' or text == '/j@BartusBot':
+                        msg = plan.lekcje_dzien(datetime.now().weekday()+1)
+                        reply(msg)
+                    elif text == '/nastepna' or text == '/n' or text == '/n@BartusBot':
+                        msg = plan.nastepna_lekcja()
+                        reply(msg)
+                    elif text == '/dzisiaj' or text == '/d' or text == '/d@BartusBot':
+                        msg = plan.lekcje_dzien(datetime.now().weekday())
+                        reply(msg)
+                    elif text == '/wczoraj' or text == '/wczoraj@BartusBot':
+                        reply(plan.lekcje_dzien(datetime.now().weekday()-1))
+                    elif text == '/sobota' or text == '/sobota@BartusBot':
+                        reply(random.choice(plan.odpowiedzi))
+                    elif text == '/niedziela' or text == '/niedziela@BartusBot':
+                        reply(random.choice(plan.odpowiedzi))
+                    elif text == '/help' or text == '/pomoc' or text == '/pomoc@BartusBot':
+                        reply(POMOC)
+                    elif text == '/wolaj' or text == "/wszyscy" or text == "/wolam" or text == '/wolaj@BartusBot' or text == '/wszyscy@BartusBot' or text == '/wolam@BartusBot':
+                        nicknames = reminderStore.getNicknames(chat_id)
+                        msg = "Wolam: "
+                        for nickname in nicknames:
+                            msg += "@"+str(nickname) + " "
+                        reply(msg)
+                    elif text.startswith("/remind"):
+                        _msg_id = str(message_id)
+                        try:
+                            temp = text
+                            temp = temp[temp.find(" ")+1:]
+                            _date_temp = temp[:temp.find("\"")]
+                            _msg = temp[len(_date_temp)+1:len(temp)-1]
+                            if len(_msg) < 1:
+                                _msg = "Prawilnie przypominam"
+                            #_msg = temp[temp.find(" ")+1:]
+                            _date = datetime.now()
+                            _date_income = datetime.fromtimestamp(int(date))
+                            _chat_id = str(chat_id)
 
-        if text.startswith('you\'re') or text.startswith('youre') or text.startswith('You\'re') or text.startswith('Youre') or text.startswith('you are') or text.startswith('You are'):
-            reply("For You")
+                            cal = parsedatetime.Calendar()
+                            cal.parse(_date_temp)
+
+                            time_struct, parse_status = cal.parse(_date_temp)
+                            _date = datetime.fromtimestamp(mktime(time_struct))
+                            #_date, _ = cal.parseDT(datetimeString=_date_temp, tzinfo=pytz.timezone("Europe/Warsaw"))
+
+                            reminderStore.putReminderRow(_chat_id, _date_income, _date, _msg, _msg_id)
+                            #reply(str(_date) + ":" + _msg)
+                            #reply(_msg + ":" + _date.strftime("%Y-%m-%d %H:%M:%S"))
+                            reply("Spoko cumplu przypomne.")
+                        except:
+                            reply("Cos sie zepsulo i nie bylo cie slychac")
+                            logging.info("Error in /remind")
+                    elif text == '/stats' or text == '/stats@BartusBot':
+                        try:
+                            stats = reminderStore.getStats(str(chat_id))
+
+                            msg = "User   :   number of messages  :   %\r\n"
+                            msg += "----------------------------------"
+                            count = 0
+                            for row in stats:
+                                count += row[1]
+                            for row in stats:
+                                percentage = (float(row[1])/float(count))*100.0
+                                msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+
+                            msg += "\r\n----------------------------------"
+                            msg += "\r\nLiczone od: 30 stycznia 2017, 17:00 \r\n"
+                        except:
+                            msg = "Statystyki nie sa dostepne"
+
+                        reply(msg)
+
+                    elif text == '/plan' or text == '/plan@BartuBot':
+                        plan.aktualizuj()
+
+                    elif text == '/weekstats' or text == '/weekstats@BartusBot':
+                        try:
+                            stats = reminderStore.getWeekStats(str(chat_id))
+                            #msg = "Liczone od: 30 stycznia 2017, 17:00 \r\n"
+                            msg = "User   :   number of messages  :   %\r\n"
+                            msg += "----------------------------------"
+                            count = 0
+                            for row in stats:
+                                count += row[1]
+                            for row in stats:
+                                percentage = (float(row[1])/float(count))*100.0
+                                msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+
+                            msg += "\r\n----------------------------------"
+                            msg += "\r\nLiczone od ostatniej niedzieli \r\n"
+                        except:
+                            msg = "Statystyki nie sa dostepne"
+
+                        reply(msg)
+
+                    elif text.startswith('/stats'):
+                        try:
+                            temp = text
+                            _msg = temp[7:]
+                            if len(_msg) < 1:
+                                _msg = "Bledny id"
+                            stats = reminderStore.getStats(str(_msg))
+                            msg = "Imie   :   ilosc wiadomosci  :   %\r\n"
+                            msg += "----------------------------------"
+                            count = 0
+                            for row in stats:
+                                count += row[1]
+                            for row in stats:
+                                percentage = (float(row[1])/float(count))*100.0
+                                msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+                            reply(msg)
+                        except:
+                            reply("Statystyki sa niedostepne")
+
+                    elif text.startswith('/weekstats'):
+                        try:
+                            temp = text
+                            _msg = temp[7:]
+                            if len(_msg) < 1:
+                                _msg = "Bledny id"
+                            stats = reminderStore.getWeekStats(str(_msg))
+                            msg = "Imie   :   ilosc wiadomosci  :   %\r\n"
+                            msg += "----------------------------------"
+                            count = 0
+                            for row in stats:
+                                count += row[1]
+                            for row in stats:
+                                percentage = (float(row[1])/float(count))*100.0
+                                msg += "\r\n" + str(row[0]) + "  :  " + str(row[1]) + "  :  " + str(round(percentage,2)) + "%"
+                            reply(msg)
+                        except:
+                            reply("Tygodniowe statystyki sa niedostepne")
+
+            if text.startswith('you\'re') or text.startswith('youre') or text.startswith('You\'re') or text.startswith('Youre') or text.startswith('you are') or text.startswith('You are'):
+                reply("For You")
 
 class ReminderTask(webapp2.RequestHandler):
     def get(self):
