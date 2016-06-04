@@ -38,3 +38,5 @@ data w formacie:
 /weekstats - wyświetla statystyki czatu liczone od poprzedniej niedzieli
 
 Mozesz tez uzywac wydluzonych komend, np, /dzisiaj, /poniedzialek, /nastepna, /jutro itd."""
+
+UNLUCKY_MESSAGE = "Aaaaaaaaa nie dla psa dla pana to"

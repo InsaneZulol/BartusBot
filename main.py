@@ -11,12 +11,14 @@ import logging
 import random
 import urllib
 import urllib2
-import utils
 import parsedatetime
 from time import mktime
 from datetime import datetime, timedelta
+
+import schedule
 import reminderStore
-import responses_utils
+import responses
+import static_variables
 
 # standard app engine imports
 from google.appengine.api import urlfetch
@@ -24,9 +26,9 @@ from google.appengine.ext import ndb
 import webapp2
 
 # Glowne zmienne
-plan = utils.Plan()                     # Obsluga planu
+plan = schedule.Schedule()                     # Obsluga planu
 reminder = reminderStore                # Obsluga przypomnien
-response = responses_utils.Responses()
+response = responses.Responses()
 #facebook = facebook_utils.Facebook()   # Obsluga facebooka
 luck_level = 2                          # W przedziale od 0 do 100 im wiecej tym czesciej glupie odpowiedzi
 
@@ -42,11 +44,11 @@ def luck_sim(msg):
     if luck > luck_level:
         return msg
     else:
-        return plan.unlucky
+        return static_variables.UNLUCKY_MESSAGE
 
 def send_smth():
     for chat in plan.chats:
-        msg = random.choice(plan.odpowiedzi)
+        msg = random.choice(plan.replies)
         resp = urllib2.urlopen(BASE_URL + 'sendMessage', urllib.urlencode({
             'chat_id': str(chat),
             'text': msg.encode('utf-8'),

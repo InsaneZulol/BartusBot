@@ -1,4 +1,4 @@
-import utils
+import schedule
 import static_variables
 import reminderStore
 import logging
@@ -7,7 +7,7 @@ import parsedatetime
 from time import mktime
 from datetime import datetime, timedelta
 
-plan = utils.Plan()
+schedule = schedule.Schedule()
 reminder = reminderStore
 
 class Responses(object):
@@ -31,23 +31,23 @@ class Responses(object):
 
     def getReplyForCommand(self, message, chat_id, message_id):
         if message in self.commands['SCHEDULE_MON']:
-            return plan.lekcje_dzien(0)
+            return schedule.lekcje_dzien(0)
         elif message in self.commands['SCHEDULE_TUE']:
-            return plan.lekcje_dzien(1)
+            return schedule.lekcje_dzien(1)
         elif message in self.commands['SCHEDULE_WED']:
-            return plan.lekcje_dzien(2)
+            return schedule.lekcje_dzien(2)
         elif message in self.commands['SCHEDULE_THU']:
-            return plan.lekcje_dzien(3)
+            return schedule.lekcje_dzien(3)
         elif message in self.commands['SCHEDULE_FRI']:
-            return plan.lekcje_dzien(4)
+            return schedule.lekcje_dzien(4)
         elif message in self.commands['SCHEDULE_TOMMOROW']:
-            return plan.lekcje_dzien(datetime.now().weekday()+1)
+            return schedule.lekcje_dzien(datetime.now().weekday()+1)
         elif message in self.commands['SCHEDULE_NEXT_LESSON']:
-            return plan.nastepna_lekcja()
+            return schedule.nastepna_lekcja()
         elif message in self.commands['SCHEDULE_TODAY']:
-            return plan.lekcje_dzien(datetime.now().weekday())
+            return schedule.lekcje_dzien(datetime.now().weekday())
         elif message in self.commands['SCHEDULE_YESTERDAY']:
-            return plan.lekcje_dzien(datetime.now().weekday()-1)
+            return schedule.lekcje_dzien(datetime.now().weekday()-1)
         elif message in self.commands['HELP']:
             return static_variables.HELP_MESSAGE
         elif message in self.commands['MENTION_ALL']:
@@ -101,18 +101,20 @@ class Responses(object):
 
     def __extractTextAndDateFromRemind__(self, message):
         message = message[message.find(" ")+1:]
-        timestamp = message[:message.find("\"")]
-        message_to_remind = message[len(timestamp)+1:len(message)-1]
+        string_date = message[:message.find("\"")]
+        message_to_remind = message[len(string_date)+1:len(message)-1]
         if len(message_to_remind) < 1:
             message_to_remind = "Prawilnie przypominam"
 
-        cal = parsedatetime.Calendar()
-        cal.parse(timestamp)
-
-        time_struct, parse_status = cal.parse(timestamp)
-        date_to_remind = datetime.fromtimestamp(mktime(time_struct))
+        date_to_remind = self.__parseStringDateToDatetime__(string_date)
 
         return {"MESSAGE_TO_REMIND" : message_to_remind, "DATE_TO_REMIND" : date_to_remind}
+
+    def __parseStringDateToDatetime__(self, string_date):
+        cal = parsedatetime.Calendar()
+        cal.parse(string_date)
+        time_struct, parse_status = cal.parse(string_date)
+        return datetime.fromtimestamp(mktime(time_struct))
 
     def __renderStats__(self, stats, footer=""):
         msg = "User   :   number of messages  :   %\r\n"

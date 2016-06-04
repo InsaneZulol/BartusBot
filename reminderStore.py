@@ -1,7 +1,7 @@
 from google.appengine.ext import db
 import datetime
 import logging
-import utils
+import schedule
 import webapp2
 from collections import Counter
 import main
