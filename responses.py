@@ -2,6 +2,7 @@ import schedule
 import static_variables
 import reminderStore
 import logging
+import random
 
 import parsedatetime
 from time import mktime
@@ -27,6 +28,7 @@ class Responses(object):
             'REMIND': ('/remind',),
             'STATS' : ('/stats', '/stats@BartusBot'),
             'WEEKSTATS': ('/weekstats', '/weekstats@BartusBot'),
+            'ROLL' : ('/roll', '/roll@BartusBot', '/reroll', '/reroll@BartusBot'),
         }
 
     def getReplyForCommand(self, message, chat_id, message_id):
@@ -58,7 +60,8 @@ class Responses(object):
             return self.__week_stats__(chat_id)
         elif self.__isStartingWithCommand__(message, self.commands['REMIND']):
             return self.__remind__(message, chat_id, message_id)
-
+        elif message in self.commands['ROLL']:
+            return self.__roll()
 
     def __mentionAll__(self, chat_id):
         nicknames = reminderStore.getNicknames(chat_id)
@@ -130,3 +133,11 @@ class Responses(object):
         msg += footer
 
         return msg
+
+    def __roll(self):
+        roll = random.randint(0, 99)
+        if roll < 10:
+            roll_string = "0"+str(roll)
+        else:
+            roll_string = str(roll)
+        return roll_string
